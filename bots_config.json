@@ -1,0 +1,40 @@
+{
+  "bytcode_main_bot": {
+    "bot_name": "Asistente Principal de Bytcode",
+    "active_models": {
+      "simple": {
+        "connector": "google",
+        "model_id": "gemini-1.5-pro"
+      },
+      "complex": {
+        "connector": "openai",
+        "model_id": "gpt-4o"
+      },
+      "code": {
+        "connector": "deepseek",
+        "model_id": "deepseek-chat"
+      }
+    },
+    "rag_index_path": "data/vector_db/bytcode_index.faiss",
+    "rag_map_path": "data/vector_db/chunks_map.json"
+  },
+  "cliente_demo_lite": {
+    "bot_name": "Bot de Demostración (Bajo Costo)",
+    "active_models": {
+      "simple": {
+        "connector": "deepseek",
+        "model_id": "deepseek-chat"
+      },
+      "complex": {
+        "connector": "deepseek",
+        "model_id": "deepseek-chat"
+      },
+      "code": {
+        "connector": "deepseek",
+        "model_id": "deepseek-chat"
+      }
+    },
+    "rag_index_path": "data/vector_db/cliente_demo_index.faiss",
+    "rag_map_path": "data/vector_db/cliente_demo_map.json"
+  }
+}
