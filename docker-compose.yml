@@ -1,0 +1,72 @@
+services:
+  # Servicio Nginx (El "Portero" oficial)
+  # Este es el único servicio que habla con el mundo exterior.
+  nginx:
+    image: nginx:alpine
+    container_name: bychat_nginx
+    volumes:
+      # Le decimos a Nginx que use nuestro archivo de configuración personalizado.
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf
+    ports:
+      # Conecta el puerto 80 del servidor al puerto 80 de este contenedor.
+      - "80:80"
+    depends_on:
+      - web
+    restart: unless-stopped
+
+  # Servicio de la Aplicación Web (FastAPI)
+  # Ya NO necesita exponer puertos directamente, Nginx se encarga.
+  web:
+    build: .
+    container_name: bychat_web
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000
+    volumes:
+      - .:/app
+    env_file:
+      - .env
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    restart: unless-stopped
+
+  # El resto de los servicios no cambian.
+  db:
+    image: postgres:14-alpine
+    container_name: bychat_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:6.2-alpine
+    container_name: bychat_redis
+    restart: unless-stopped
+
+  worker:
+    build: .
+    container_name: bychat_worker
+    command: celery -A app.worker.celery_app worker --loglevel=info
+    volumes:
+      - .:/app
+    env_file:
+      - .env
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    restart: unless-stopped
+
+volumes:
+  postgres_data:

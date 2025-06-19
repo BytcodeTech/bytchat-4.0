@@ -1,0 +1,32 @@
+# --- Framework para la API ---
+fastapi
+uvicorn[standard]
+python-multipart
+
+# --- Base de Datos (NUEVO para el SaaS) ---
+sqlalchemy
+psycopg2-binary
+alembic
+
+# --- Tareas en Segundo Plano (NUEVO para el SaaS) ---
+celery
+redis
+
+# --- Conectores de Modelos LLM ---
+google-generativeai
+openai
+
+# --- Sistema RAG y Vectores ---
+sentence-transformers
+faiss-cpu
+numpy
+
+# --- Langchain ---
+langchain
+langchain-community
+
+# --- Utilidades y Seguridad ---
+python-dotenv
+pydantic-settings
+passlib[bcrypt]
+python-jose[cryptography]

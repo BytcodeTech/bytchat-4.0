@@ -1,0 +1,12 @@
+# Ignorar el archivo de secretos
+.env
+
+# Ignorar carpetas de cache de Python
+__pycache__/
+*.pyc
+
+# Ignorar la base de datos de vectores (suele ser grande y específica del entorno)
+data/vector_db/
+
+# Ignorar archivos de configuración local de VSCode
+.vscode/
