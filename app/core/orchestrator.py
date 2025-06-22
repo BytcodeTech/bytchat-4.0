@@ -1,17 +1,28 @@
-# Un punto para los archivos en la misma carpeta (core)
+# --- Importaciones corregidas para la nueva estructura ---
+
+# Un punto (.) para importar módulos de la misma carpeta (core).
 from .rag_retriever import RAGRetriever
 from .model_router import ModelRouter
 
-# Dos puntos para salir de 'core' y entrar en 'connectors'
+# Dos puntos (..) para subir un nivel (a 'app') y luego entrar a 'connectors'.
 from ..connectors.google_connector import GoogleConnector
 from ..connectors.openai_connector import OpenAIConnector
 from ..connectors.deepseek_connector import DeepSeekConnector
+from ..config import settings # Importamos la configuración para las API keys
 
 class Orchestrator:
-    def __init__(self):
-        print("Orchestrator (Streaming) inicializado.")
-        self.retriever = RAGRetriever()
-        self.router = ModelRouter()
+    def __init__(self, bot_config: dict):
+        print(f"Orquestador (Streaming) inicializado para la configuración: {bot_config}")
+        
+        self.bot_config = bot_config
+        
+        # Por ahora, dejamos la lógica del RAG y el router comentada.
+        # La activaremos en un siguiente paso.
+        # self.retriever = RAGRetriever(bot_config['rag_index_path']) 
+        # self.router = ModelRouter()
+        
+        # Inicializamos los conectores. Las claves de API se cargan
+        # automáticamente dentro de cada conector desde la configuración.
         self.connectors = {
             "google": GoogleConnector(),
             "openai": OpenAIConnector(),
@@ -22,24 +33,16 @@ class Orchestrator:
     def handle_query(self, user_id: str, query: str):
         print(f"\n--- Nueva Petición Recibida --- \nProcesando pregunta: '{query}'")
 
-        context, score = self.retriever.search(query)
-        
-        prompt_package = {}
-        if score < 1.5:
-            prompt_package = {
-                "system_prompt": f"Basándote estrictamente en el siguiente CONTEXTO, responde a la PREGUNTA del usuario de forma amable y directa. No añadas información que no esté en el contexto. CONTEXTO: --- {context} ---",
-                "user_question": query
-            }
-        else:
-            prompt_package = {
-                "system_prompt": "Eres un asistente servicial.",
-                "user_question": f"Responde a la siguiente pregunta del usuario de la mejor manera que puedas. PREGUNTA: {query}"
-            }
+        prompt_package = {
+            "system_prompt": "Eres un asistente de IA llamado Bytchat, creado por Bytcode. Eres servicial, inteligente y un poco creativo.",
+            "user_question": query
+        }
 
-        model_decision = self.router.select_model(query)
-        selected_connector_type = model_decision["connector_type"]
-        selected_model_id = model_decision["model_id"]
+        # En el futuro, esta configuración vendrá de la base de datos para cada bot.
+        selected_connector_type = "google"
+        selected_model_id = "gemini-1.5-pro-latest"
         
         connector = self.connectors[selected_connector_type]
         
+        # Devolvemos el stream del conector.
         return connector.get_response_stream(prompt_package=prompt_package, model_id=selected_model_id)
