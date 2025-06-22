@@ -1,8 +1,11 @@
+# Un punto para los archivos en la misma carpeta (core)
 from .rag_retriever import RAGRetriever
 from .model_router import ModelRouter
-from connectors.google_connector import GoogleConnector
-from connectors.openai_connector import OpenAIConnector
-from connectors.deepseek_connector import DeepSeekConnector
+
+# Dos puntos para salir de 'core' y entrar en 'connectors'
+from ..connectors.google_connector import GoogleConnector
+from ..connectors.openai_connector import OpenAIConnector
+from ..connectors.deepseek_connector import DeepSeekConnector
 
 class Orchestrator:
     def __init__(self):
