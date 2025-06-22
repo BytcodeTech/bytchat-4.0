@@ -16,7 +16,7 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# --- Endpoints de Autenticación y Usuarios ---
+# === Endpoints de Autenticación y Usuarios ===
 @app.post("/token", response_model=schemas.Token, tags=["Authentication"])
 def login_for_access_token(db: Session = Depends(get_db), form_data: OAuth2PasswordRequestForm = Depends()):
     user = crud.get_user_by_email(db, email=form_data.username)
@@ -32,7 +32,7 @@ def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
         raise HTTPException(status_code=400, detail="Email already registered")
     return crud.create_user(db=db, user=user)
 
-# --- Endpoints para la Gestión de Bots (Protegidos) ---
+# === Endpoints para la Gestión de Bots (Protegidos) ===
 @app.post("/bots/", response_model=schemas.Bot, tags=["Bots"])
 def create_bot_for_user(bot: schemas.BotCreate, db: Session = Depends(get_db), current_user: models.User = Depends(auth.get_current_user)):
     return crud.create_user_bot(db=db, bot=bot, user_id=current_user.id)
@@ -42,7 +42,27 @@ def read_user_bots(db: Session = Depends(get_db), current_user: models.User = De
     bots = crud.get_bots_by_user(db, user_id=current_user.id)
     return bots
 
-# --- Endpoint de Chat (Protegido y Funcional) ---
+# --- NUEVO ENDPOINT PARA CONFIGURAR UN BOT ---
+@app.put("/bots/{bot_id}/", response_model=schemas.Bot, tags=["Bots"])
+def configure_bot(
+    bot_id: int,
+    config: schemas.BotConfigUpdate,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(auth.get_current_user)
+):
+    """
+    Actualiza la configuración de un bot específico (prompt, modelos).
+    """
+    bot = db.query(models.Bot).filter(models.Bot.id == bot_id).first()
+    if not bot:
+        raise HTTPException(status_code=404, detail="Bot no encontrado")
+    if bot.owner_id != current_user.id:
+        raise HTTPException(status_code=403, detail="No tienes permiso para modificar este bot")
+    
+    return crud.update_bot_config(db=db, bot=bot, config=config)
+
+
+# === Endpoint de Chat (Protegido y Funcional) ===
 @app.post("/chat/{bot_id}", tags=["Chat"])
 def handle_chat(
     bot_id: int, 
@@ -56,13 +76,19 @@ def handle_chat(
     if bot.owner_id != current_user.id:
         raise HTTPException(status_code=403, detail="No tienes permiso para acceder a este bot")
 
-    bot_config = {"name": bot.name}
+    # Ahora el orquestador recibirá la configuración completa del bot desde la BD
+    bot_config = {
+        "name": bot.name,
+        "system_prompt": bot.system_prompt,
+        "simple_model_id": bot.simple_model_id,
+        "complex_model_id": bot.complex_model_id
+    }
     orchestrator = Orchestrator(bot_config=bot_config)
     text_stream_generator = orchestrator.handle_query(user_id=str(current_user.id), query=query)
     
     return StreamingResponse(text_stream_generator, media_type="text/plain; charset=utf-8")
 
-# --- Endpoint de Bienvenida ---
+# === Endpoint de Bienvenida ===
 @app.get("/", tags=["Root"])
 def read_root():
     return {"message": "Bienvenido a la API de Bytchat SaaS. Ve a /docs para ver la documentación interactiva."}

@@ -1,33 +1,36 @@
-from sqlalchemy import Column, Integer, String, Boolean, ForeignKey
+from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, Text
 from sqlalchemy.orm import relationship
-
-# Importamos la clase Base desde nuestro archivo de base de datos
-# Todos nuestros modelos heredarán de esta clase
 from .database import Base
 
 class User(Base):
-    __tablename__ = "users" # Nombre de la tabla en la base de datos
-
+    __tablename__ = "users"
     id = Column(Integer, primary_key=True, index=True)
     email = Column(String, unique=True, index=True, nullable=False)
     hashed_password = Column(String, nullable=False)
     is_active = Column(Boolean, default=True)
 
-    # Esta es la relación: Un usuario puede tener muchos bots.
-    # 'back_populates' le dice a SQLAlchemy cómo conectar esta relación
-    # con la relación en el modelo Bot.
     bots = relationship("Bot", back_populates="owner")
 
 
 class Bot(Base):
-    __tablename__ = "bots" # Nombre de la tabla en la base de datos
+    __tablename__ = "bots"
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, index=True)
     description = Column(String, nullable=True)
+    
+    # --- NUEVAS COLUMNAS PARA PERSONALIZACIÓN ---
 
-    # Clave foránea: Esta columna conecta cada bot con un usuario.
+    # El 'prompt' o personalidad base del bot.
+    system_prompt = Column(Text, default="Eres un asistente de IA servicial.")
+
+    # El modelo para tareas simples (ej. 'gemini-1.5-flash-latest')
+    simple_model_id = Column(String, default="gemini-1.5-flash-latest")
+
+    # El modelo para tareas complejas (ej. 'gpt-4o')
+    complex_model_id = Column(String, default="gemini-1.5-pro-latest")
+    
+    # --- FIN DE LAS NUEVAS COLUMNAS ---
+    
     owner_id = Column(Integer, ForeignKey("users.id"))
-
-    # Esta es la otra parte de la relación: Un bot pertenece a un 'owner' (dueño).
     owner = relationship("User", back_populates="bots")
