@@ -1,10 +1,10 @@
-from fastapi import Depends, FastAPI, HTTPException, status
+import os
+import shutil
+from fastapi import Depends, FastAPI, HTTPException, status, UploadFile, File
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from typing import List, Optional
-import shutil
-import os
-from fastapi import UploadFile, File
+from fastapi.responses import StreamingResponse
 
 from . import auth, crud, models, schemas
 from .database import engine, get_db
@@ -16,7 +16,7 @@ models.Base.metadata.create_all(bind=engine)
 app = FastAPI(
     title="Bytchat SaaS API",
     description="API para la plataforma multi-tenant de Bytchat.",
-    version="1.2.1" # Subimos la versión!
+    version="1.4.0" # ¡Subimos la versión!
 )
 
 # === Endpoints de Autenticación y Usuarios ===
@@ -45,9 +45,8 @@ def read_user_bots(db: Session = Depends(get_db), current_user: models.User = De
     bots = crud.get_bots_by_user(db, user_id=current_user.id)
     return bots
 
-# --- ENDPOINT PARA CONFIGURAR EL PROMPT (RESTAURADO) ---
 @app.put("/bots/{bot_id}", response_model=schemas.Bot, tags=["Bots"])
-def configure_bot_prompt(
+def configure_bot(
     bot_id: int,
     config: schemas.BotConfigUpdate,
     db: Session = Depends(get_db),
@@ -59,10 +58,8 @@ def configure_bot_prompt(
     bot = db.query(models.Bot).filter(models.Bot.id == bot_id).first()
     if not bot or bot.owner_id != current_user.id:
         raise HTTPException(status_code=403, detail="Bot no encontrado o no tienes permiso")
-    
     return crud.update_bot_config(db=db, bot=bot, config=config)
 
-# --- ENDPOINT PARA AÑADIR UN MODELO A LA CAJA DE HERRAMIENTAS ---
 @app.post("/bots/{bot_id}/models/", response_model=schemas.BotModelConfig, tags=["Bots"])
 def add_model_to_bot(
     bot_id: int,
@@ -76,10 +73,8 @@ def add_model_to_bot(
     bot = db.query(models.Bot).filter(models.Bot.id == bot_id).first()
     if not bot or bot.owner_id != current_user.id:
         raise HTTPException(status_code=403, detail="Bot no encontrado o no tienes permiso")
-    
     return crud.add_model_config_to_bot(db=db, config=model_config, bot_id=bot_id)
 
-# --- Endpoint de Entrenamiento (Protegido) ---
 @app.post("/bots/{bot_id}/train", tags=["Bots"])
 def train_bot_with_document(
     bot_id: int,
@@ -93,7 +88,7 @@ def train_bot_with_document(
     bot = db.query(models.Bot).filter(models.Bot.id == bot_id).first()
     if not bot or bot.owner_id != current_user.id:
         raise HTTPException(status_code=403, detail="Bot no encontrado o no tienes permiso")
-
+    
     upload_folder = "temp_uploads"
     os.makedirs(upload_folder, exist_ok=True)
     file_path = os.path.join(upload_folder, f"{bot_id}_{file.filename}")
@@ -104,8 +99,7 @@ def train_bot_with_document(
     
     return {"message": f"Archivo '{file.filename}' recibido para el bot {bot_id}. El entrenamiento ha comenzado.", "task_id": task.id}
 
-
-# === Endpoint de Chat (Aún no actualizado a la nueva lógica) ===
+# === Endpoint de Chat (Protegido y Funcional) ===
 @app.post("/chat/{bot_id}", tags=["Chat"])
 def handle_chat(
     bot_id: int, 
@@ -119,9 +113,13 @@ def handle_chat(
     if bot.owner_id != current_user.id:
         raise HTTPException(status_code=403, detail="No tienes permiso")
 
-    return {"message": f"La lógica de chat para el bot {bot.name} aún no está implementada con la 'caja de herramientas'."}
+    bot_config_dict = schemas.Bot.from_orm(bot).model_dump()
+    orchestrator = Orchestrator(bot_config=bot_config_dict, bot_id=bot_id)
+    text_stream_generator = orchestrator.handle_query(user_id=str(current_user.id), query=query)
+    
+    return StreamingResponse(text_stream_generator, media_type="text/plain; charset=utf-8")
 
 # === Endpoint de Bienvenida ===
 @app.get("/", tags=["Root"])
 def read_root():
-    return {"message": "Bienvenido a la API de Bytchat SaaS v1.2.1. Ve a /docs para ver la documentación interactiva."}
+    return {"message": "Bienvenido a la API de Bytchat SaaS v1.4.0. Ve a /docs para ver la documentación interactiva."}
