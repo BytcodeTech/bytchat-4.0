@@ -8,18 +8,19 @@ from langchain_community.embeddings import SentenceTransformerEmbeddings
 from celery import Celery
 from .config import settings
 
-# Crear la instancia de la aplicación Celery
+# Crear la instancia de la aplicación Celery, leyendo la configuración
+# desde nuestro objeto 'settings' centralizado.
 celery_app = Celery(
     __name__,
     broker=settings.CELERY_BROKER_URL,
     backend=settings.CELERY_RESULT_BACKEND
 )
 
-# --- NUEVA TAREA PARA PROCESAR E INDEXAR DOCUMENTOS ---
+# --- TAREA PARA PROCESAR E INDEXAR DOCUMENTOS ---
 @celery_app.task(name="process_and_index_documents_task")
 def process_and_index_documents(bot_id: int, file_path: str):
     """
-    Tarea de Celery que lee un documento de texto, lo procesa y crea
+    Tarea de Celery que lee un documento, lo procesa y crea
     un índice vectorial FAISS específico para un bot.
     """
     print(f"Iniciando procesamiento de documentos para el bot_id: {bot_id} desde el archivo: {file_path}")

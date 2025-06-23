@@ -6,17 +6,20 @@ from sqlalchemy.orm import Session
 from typing import List, Optional
 from fastapi.responses import StreamingResponse
 
+# --- Imports de nuestra aplicación ---
 from . import auth, crud, models, schemas
 from .database import engine, get_db
 from .core.orchestrator import Orchestrator
+# ¡Importamos nuestra app de Celery para poder usarla!
 from .worker import celery_app
 
+# Crea las tablas en la base de datos si no existen
 models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
     title="Bytchat SaaS API",
     description="API para la plataforma multi-tenant de Bytchat.",
-    version="1.4.0" # ¡Subimos la versión!
+    version="1.4.0" # Subimos la versión
 )
 
 # === Endpoints de Autenticación y Usuarios ===
@@ -24,7 +27,11 @@ app = FastAPI(
 def login_for_access_token(db: Session = Depends(get_db), form_data: OAuth2PasswordRequestForm = Depends()):
     user = crud.get_user_by_email(db, email=form_data.username)
     if not user or not auth.verify_password(form_data.password, user.hashed_password):
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Incorrect email or password")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect email or password",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
     access_token = auth.create_access_token(data={"sub": user.email})
     return {"access_token": access_token, "token_type": "bearer"}
 
@@ -75,6 +82,7 @@ def add_model_to_bot(
         raise HTTPException(status_code=403, detail="Bot no encontrado o no tienes permiso")
     return crud.add_model_config_to_bot(db=db, config=model_config, bot_id=bot_id)
 
+# --- Endpoint de Entrenamiento (AHORA CONECTADO A CELERY) ---
 @app.post("/bots/{bot_id}/train", tags=["Bots"])
 def train_bot_with_document(
     bot_id: int,
@@ -84,22 +92,24 @@ def train_bot_with_document(
 ):
     """
     Permite subir un documento de texto (.txt) para entrenar a un bot.
+    El procesamiento se realiza en segundo plano.
     """
     bot = db.query(models.Bot).filter(models.Bot.id == bot_id).first()
     if not bot or bot.owner_id != current_user.id:
         raise HTTPException(status_code=403, detail="Bot no encontrado o no tienes permiso")
-    
+
     upload_folder = "temp_uploads"
     os.makedirs(upload_folder, exist_ok=True)
     file_path = os.path.join(upload_folder, f"{bot_id}_{file.filename}")
     with open(file_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
 
+    # ¡Aquí está la conexión! Lanzamos la tarea a nuestro worker.
     task = celery_app.send_task('process_and_index_documents_task', args=[bot_id, file_path])
     
-    return {"message": f"Archivo '{file.filename}' recibido para el bot {bot_id}. El entrenamiento ha comenzado.", "task_id": task.id}
+    return {"message": f"Archivo '{file.filename}' recibido. El entrenamiento para el bot {bot_id} ha comenzado.", "task_id": task.id}
 
-# === Endpoint de Chat (Protegido y Funcional) ===
+# === Endpoint de Chat (Aún no usa la memoria RAG) ===
 @app.post("/chat/{bot_id}", tags=["Chat"])
 def handle_chat(
     bot_id: int, 
