@@ -1,19 +1,22 @@
 from fastapi import Depends, FastAPI, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
-from typing import List
-from fastapi.responses import StreamingResponse
+from typing import List, Optional
+import shutil
+import os
+from fastapi import UploadFile, File
 
 from . import auth, crud, models, schemas
 from .database import engine, get_db
 from .core.orchestrator import Orchestrator
+from .worker import celery_app
 
 models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
     title="Bytchat SaaS API",
     description="API para la plataforma multi-tenant de Bytchat.",
-    version="1.0.0"
+    version="1.2.1" # Subimos la versión!
 )
 
 # === Endpoints de Autenticación y Usuarios ===
@@ -42,27 +45,67 @@ def read_user_bots(db: Session = Depends(get_db), current_user: models.User = De
     bots = crud.get_bots_by_user(db, user_id=current_user.id)
     return bots
 
-# --- NUEVO ENDPOINT PARA CONFIGURAR UN BOT ---
-@app.put("/bots/{bot_id}/", response_model=schemas.Bot, tags=["Bots"])
-def configure_bot(
+# --- ENDPOINT PARA CONFIGURAR EL PROMPT (RESTAURADO) ---
+@app.put("/bots/{bot_id}", response_model=schemas.Bot, tags=["Bots"])
+def configure_bot_prompt(
     bot_id: int,
     config: schemas.BotConfigUpdate,
     db: Session = Depends(get_db),
     current_user: models.User = Depends(auth.get_current_user)
 ):
     """
-    Actualiza la configuración de un bot específico (prompt, modelos).
+    Actualiza la configuración general de un bot (como su system_prompt).
     """
     bot = db.query(models.Bot).filter(models.Bot.id == bot_id).first()
-    if not bot:
-        raise HTTPException(status_code=404, detail="Bot no encontrado")
-    if bot.owner_id != current_user.id:
-        raise HTTPException(status_code=403, detail="No tienes permiso para modificar este bot")
+    if not bot or bot.owner_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Bot no encontrado o no tienes permiso")
     
     return crud.update_bot_config(db=db, bot=bot, config=config)
 
+# --- ENDPOINT PARA AÑADIR UN MODELO A LA CAJA DE HERRAMIENTAS ---
+@app.post("/bots/{bot_id}/models/", response_model=schemas.BotModelConfig, tags=["Bots"])
+def add_model_to_bot(
+    bot_id: int,
+    model_config: schemas.BotModelConfigCreate,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(auth.get_current_user)
+):
+    """
+    Añade una nueva configuración de modelo (una 'herramienta') a la caja de un bot.
+    """
+    bot = db.query(models.Bot).filter(models.Bot.id == bot_id).first()
+    if not bot or bot.owner_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Bot no encontrado o no tienes permiso")
+    
+    return crud.add_model_config_to_bot(db=db, config=model_config, bot_id=bot_id)
 
-# === Endpoint de Chat (Protegido y Funcional) ===
+# --- Endpoint de Entrenamiento (Protegido) ---
+@app.post("/bots/{bot_id}/train", tags=["Bots"])
+def train_bot_with_document(
+    bot_id: int,
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(auth.get_current_user)
+):
+    """
+    Permite subir un documento de texto (.txt) para entrenar a un bot.
+    """
+    bot = db.query(models.Bot).filter(models.Bot.id == bot_id).first()
+    if not bot or bot.owner_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Bot no encontrado o no tienes permiso")
+
+    upload_folder = "temp_uploads"
+    os.makedirs(upload_folder, exist_ok=True)
+    file_path = os.path.join(upload_folder, f"{bot_id}_{file.filename}")
+    with open(file_path, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+
+    task = celery_app.send_task('process_and_index_documents_task', args=[bot_id, file_path])
+    
+    return {"message": f"Archivo '{file.filename}' recibido para el bot {bot_id}. El entrenamiento ha comenzado.", "task_id": task.id}
+
+
+# === Endpoint de Chat (Aún no actualizado a la nueva lógica) ===
 @app.post("/chat/{bot_id}", tags=["Chat"])
 def handle_chat(
     bot_id: int, 
@@ -74,21 +117,11 @@ def handle_chat(
     if not bot:
         raise HTTPException(status_code=404, detail="Bot no encontrado")
     if bot.owner_id != current_user.id:
-        raise HTTPException(status_code=403, detail="No tienes permiso para acceder a este bot")
+        raise HTTPException(status_code=403, detail="No tienes permiso")
 
-    # Ahora el orquestador recibirá la configuración completa del bot desde la BD
-    bot_config = {
-        "name": bot.name,
-        "system_prompt": bot.system_prompt,
-        "simple_model_id": bot.simple_model_id,
-        "complex_model_id": bot.complex_model_id
-    }
-    orchestrator = Orchestrator(bot_config=bot_config)
-    text_stream_generator = orchestrator.handle_query(user_id=str(current_user.id), query=query)
-    
-    return StreamingResponse(text_stream_generator, media_type="text/plain; charset=utf-8")
+    return {"message": f"La lógica de chat para el bot {bot.name} aún no está implementada con la 'caja de herramientas'."}
 
 # === Endpoint de Bienvenida ===
 @app.get("/", tags=["Root"])
 def read_root():
-    return {"message": "Bienvenido a la API de Bytchat SaaS. Ve a /docs para ver la documentación interactiva."}
+    return {"message": "Bienvenido a la API de Bytchat SaaS v1.2.1. Ve a /docs para ver la documentación interactiva."}

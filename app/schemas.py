@@ -1,33 +1,49 @@
 from pydantic import BaseModel
 from typing import List, Optional
 
-# --- Esquema para actualizar la configuración de un bot ---
-# Todos los campos son opcionales, para que el usuario pueda
-# actualizar solo lo que quiera (ej. solo el prompt).
+# --- Nuevos Schemas para la Configuración de Modelos ---
+
+class BotModelConfigBase(BaseModel):
+    task_type: str = "general"
+    provider: str
+    model_id: str
+    is_active: bool = True
+
+class BotModelConfigCreate(BotModelConfigBase):
+    pass 
+
+class BotModelConfig(BotModelConfigBase):
+    id: int
+    bot_id: int
+    class Config:
+        from_attributes = True
+
+# --- Schema para actualizar el prompt de un bot ---
+# (Lo mantendremos separado por si quieres actualizar solo el prompt)
 class BotConfigUpdate(BaseModel):
     system_prompt: Optional[str] = None
-    simple_model_id: Optional[str] = None
-    complex_model_id: Optional[str] = None
 
-# --- Esquemas para el Bot ---
+# --- Schemas de Bot Actualizados ---
+
 class BotBase(BaseModel):
     name: str
     description: Optional[str] = None
 
 class BotCreate(BotBase):
-    pass
+    # Opcionalmente, podemos pasar una lista de configuraciones al crear el bot
+    initial_configs: Optional[List[BotModelConfigCreate]] = None
 
 class Bot(BotBase):
     id: int
     owner_id: int
     system_prompt: str
-    simple_model_id: str
-    complex_model_id: str
+    # Ahora, un bot tiene una lista de configuraciones de modelos
+    model_configs: List[BotModelConfig] = []
 
     class Config:
         from_attributes = True
 
-# --- Esquemas para el Usuario ---
+# --- El resto del archivo se mantiene igual ---
 class UserBase(BaseModel):
     email: str
 
@@ -42,7 +58,6 @@ class User(UserBase):
     class Config:
         from_attributes = True
 
-# --- Esquema para el Token de Login ---
 class TokenData(BaseModel):
     email: Optional[str] = None
 

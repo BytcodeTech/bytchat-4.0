@@ -1,38 +1,117 @@
-# Bytchat 4.0
+# Documentación de la API Bytchat SaaS v1.2.1
 
-Bytchat 4.0 es una plataforma de chatbot avanzada y modular, diseñada para ofrecer conversaciones inteligentes y contextuales. La aplicación integra un sistema de **Generación Aumentada por Recuperación (RAG)** para responder preguntas basadas en una base de conocimiento documental, y cuenta con un sistema de enrutamiento capaz de conectarse a múltiples proveedores de Modelos de Lenguaje Grandes (LLM) como Google, OpenAI y DeepSeek.
+Bienvenido a la documentación de la API para la plataforma Bytchat. Esta API permite gestionar usuarios, crear y configurar bots de IA personalizados, y chatear con ellos.
 
-## ✨ Características Principales
+## Autenticación
 
-* **Interfaz de Chat Interactiva**: Un widget de chat moderno y responsivo construido con HTML, CSS y JavaScript.
-* **Backend Asíncrono de Alto Rendimiento**: Construido con **FastAPI**, garantiza respuestas rápidas y eficientes.
-* **Generación Aumentada por Recuperación (RAG)**: El chatbot puede consultar una base de datos vectorial (creada con FAISS) para encontrar información relevante en documentos locales y usarla como contexto para generar respuestas precisas.
-* **Soporte Multi-LLM**: Arquitectura de conectores que permite integrar y utilizar fácilmente diferentes modelos de lenguaje de proveedores como Google (Gemini), OpenAI (GPT) y DeepSeek.
-* **Respuestas en Tiempo Real (Streaming)**: Las respuestas del bot se transmiten palabra por palabra, mejorando significativamente la experiencia del usuario.
-* **Procesamiento de Datos Personalizado**: Incluye un script (`indexer.py`) para procesar tus propios documentos de texto, convertirlos en vectores y construir la base de conocimiento para el sistema RAG.
+La API utiliza un sistema de **Tokens Bearer (OAuth2)** para proteger los endpoints sensibles. El flujo es el siguiente:
+1.  Registra un nuevo usuario con el endpoint `POST /users/`.
+2.  Inicia sesión con ese usuario usando `POST /token` para obtener un `access_token`.
+3.  Para todos los endpoints que requieran autenticación, debes incluir una cabecera (header) de la siguiente forma: `Authorization: Bearer TU_ACCESS_TOKEN_AQUI`
 
-## 🚀 Arquitectura del Proyecto
+## Endpoints de la API
 
-El proyecto sigue una arquitectura modular y desacoplada que separa las responsabilidades principales:
+A continuación se detallan los endpoints agrupados por funcionalidad.
 
-1.  **Frontend (`index.html`, `static/script.js`)**: La capa de presentación con la que interactúa el usuario. Se comunica con el backend a través de una API REST.
-2.  **Backend (`app.py`)**: El servidor web de FastAPI que expone el endpoint `/chat` y gestiona el ciclo de vida de la aplicación.
-3.  **Orquestador (`core/orchestrator.py`)**: Es el cerebro de la aplicación. Recibe las consultas, utiliza el RAG para obtener contexto, consulta al enrutador de modelos y delega la generación de la respuesta al conector correspondiente.
-4.  **Sistema RAG (`core/rag_retriever.py`)**: Se encarga de convertir la pregunta del usuario en un vector, buscar en el índice FAISS los documentos más relevantes y devolver el contexto al orquestador.
-5.  **Conectores (`connectors/`)**: Módulos individuales que encapsulan la lógica para comunicarse con las APIs de los diferentes proveedores de LLM (Google, OpenAI, etc.).
-6.  **Indexer (`indexer.py`)**: Herramienta offline para procesar documentos de texto (`.txt`) y crear la base de datos vectorial que utiliza el sistema RAG.
+---
 
-## 🛠️ Instalación y Puesta en Marcha
+### 🟢 Authentication (`/token`)
 
-Sigue estos pasos para configurar y ejecutar el proyecto en tu entorno local.
+Endpoints para gestionar el inicio de sesión.
 
-### Prerrequisitos
+#### `POST /token`
+- **Descripción:** Inicia sesión con un usuario y contraseña para obtener un token de acceso.
+- **Cuerpo de la Petición:** `application/x-www-form-urlencoded` con los campos `username` (que es el email) y `password`.
+- **Respuesta Exitosa (200):**
+  ```json
+  {
+    "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "token_type": "bearer"
+  }
+  ```
 
-* Python 3.8+
-* pip (gestor de paquetes de Python)
+---
 
-### 1. Clona el Repositorio
+### 🟢 Users (`/users/`)
 
-```bash
-git clone [https://github.com/tu-usuario/bytchat-4.0.git](https://github.com/tu-usuario/bytchat-4.0.git)
-cd bytchcat-4.0
+Endpoint para la gestión de usuarios.
+
+#### `POST /users/`
+- **Descripción:** Crea un nuevo usuario en la plataforma.
+- **Cuerpo de la Petición:**
+  ```json
+  {
+    "email": "nuevo.usuario@ejemplo.com",
+    "password": "una-clave-segura"
+  }
+  ```
+- **Respuesta Exitosa (200):** Devuelve el objeto del usuario creado (sin la contraseña).
+  ```json
+  {
+    "email": "nuevo.usuario@ejemplo.com",
+    "id": 1,
+    "is_active": true,
+    "bots": []
+  }
+  ```
+
+---
+
+### 🟢 Bots (`/bots/`)
+
+Endpoints protegidos para la gestión de los bots de un usuario. Requieren autenticación.
+
+#### `POST /bots/`
+- **Descripción:** Crea un nuevo bot para el usuario autenticado.
+- **Cuerpo de la Petición:**
+  ```json
+  {
+    "name": "Mi Nuevo Asistente",
+    "description": "Un bot para pruebas."
+  }
+  ```
+
+#### `GET /bots/`
+- **Descripción:** Devuelve una lista de todos los bots que pertenecen al usuario autenticado.
+
+#### `PUT /bots/{bot_id}`
+- **Descripción:** Actualiza la configuración general de un bot (como su personalidad o "system prompt").
+- **Cuerpo de la Petición:**
+  ```json
+  {
+    "system_prompt": "Ahora eres un robot pirata que habla como tal."
+  }
+  ```
+
+#### `POST /bots/{bot_id}/models/`
+- **Descripción:** Añade un nuevo modelo de IA a la "caja de herramientas" de un bot específico.
+- **Cuerpo de la Petición:**
+  ```json
+  {
+    "provider": "openai",
+    "model_id": "gpt-4o",
+    "task_type": "complex"
+  }
+  ```
+
+---
+
+### 🟢 Chat (`/chat/`)
+
+Endpoint protegido para interactuar con un bot.
+
+#### `POST /chat/{bot_id}`
+- **Descripción:** Envía una pregunta a un bot específico y recibe una respuesta en tiempo real (streaming).
+- **Parámetros:**
+    - `bot_id` (en la URL): El ID del bot con el que se quiere chatear.
+    - `query` (en la URL): La pregunta del usuario.
+
+---
+
+### 🟢 Root (`/`)
+
+Endpoint de bienvenida.
+
+#### `GET /`
+- **Descripción:** Un endpoint simple para verificar que la API está en línea. Devuelve un mensaje de bienvenida.
+

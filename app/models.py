@@ -9,7 +9,8 @@ class User(Base):
     hashed_password = Column(String, nullable=False)
     is_active = Column(Boolean, default=True)
 
-    bots = relationship("Bot", back_populates="owner")
+    # La relación se mantiene igual aquí
+    bots = relationship("Bot", back_populates="owner", cascade="all, delete-orphan")
 
 
 class Bot(Base):
@@ -18,19 +19,28 @@ class Bot(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, index=True)
     description = Column(String, nullable=True)
-    
-    # --- NUEVAS COLUMNAS PARA PERSONALIZACIÓN ---
-
-    # El 'prompt' o personalidad base del bot.
     system_prompt = Column(Text, default="Eres un asistente de IA servicial.")
-
-    # El modelo para tareas simples (ej. 'gemini-1.5-flash-latest')
-    simple_model_id = Column(String, default="gemini-1.5-flash-latest")
-
-    # El modelo para tareas complejas (ej. 'gpt-4o')
-    complex_model_id = Column(String, default="gemini-1.5-pro-latest")
-    
-    # --- FIN DE LAS NUEVAS COLUMNAS ---
     
     owner_id = Column(Integer, ForeignKey("users.id"))
     owner = relationship("User", back_populates="bots")
+
+    # --- LÍNEA CORREGIDA ---
+    # Cambiamos 'back_pop_ulates' a 'back_populates'
+    model_configs = relationship("BotModelConfig", back_populates="bot", cascade="all, delete-orphan")
+
+
+class BotModelConfig(Base):
+    __tablename__ = "bot_model_configs"
+
+    id = Column(Integer, primary_key=True, index=True)
+    task_type = Column(String, default="general") 
+    provider = Column(String, nullable=False)
+    model_id = Column(String, nullable=False)
+    is_active = Column(Boolean, default=True)
+
+    bot_id = Column(Integer, ForeignKey("bots.id"))
+    
+    # --- LÍNEA CORREGIDA ---
+    # Cambiamos 'back_pop_ulates' a 'back_populates'
+    bot = relationship("Bot", back_populates="model_configs")
+
