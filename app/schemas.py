@@ -1,7 +1,7 @@
 from pydantic import BaseModel
 from typing import List, Optional
 
-# --- Nuevos Schemas para la Configuración de Modelos ---
+# --- Schemas para la Configuración de Modelos ---
 
 class BotModelConfigBase(BaseModel):
     task_type: str = "general"
@@ -19,31 +19,28 @@ class BotModelConfig(BotModelConfigBase):
         from_attributes = True
 
 # --- Schema para actualizar el prompt de un bot ---
-# (Lo mantendremos separado por si quieres actualizar solo el prompt)
 class BotConfigUpdate(BaseModel):
     system_prompt: Optional[str] = None
 
-# --- Schemas de Bot Actualizados ---
+# --- Schemas de Bot ---
 
 class BotBase(BaseModel):
     name: str
     description: Optional[str] = None
 
 class BotCreate(BotBase):
-    # Opcionalmente, podemos pasar una lista de configuraciones al crear el bot
     initial_configs: Optional[List[BotModelConfigCreate]] = None
 
 class Bot(BotBase):
     id: int
     owner_id: int
     system_prompt: str
-    # Ahora, un bot tiene una lista de configuraciones de modelos
     model_configs: List[BotModelConfig] = []
 
     class Config:
         from_attributes = True
 
-# --- El resto del archivo se mantiene igual ---
+# --- Schemas para Usuarios ---
 class UserBase(BaseModel):
     email: str
 
@@ -64,3 +61,11 @@ class TokenData(BaseModel):
 class Token(BaseModel):
     access_token: str
     token_type: str
+
+# --- SCHEMA AÑADIDO PARA EL CHAT ---
+class ChatRequest(BaseModel):
+    query: str
+
+    # --- Nuevo Schema para las Peticiones de Chat ---
+class ChatQuery(BaseModel):
+    query: str

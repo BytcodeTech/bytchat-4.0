@@ -9,7 +9,7 @@ Redis: Broker de mensajería para tareas asíncronas.
 Celery (Worker): Servicio para ejecutar tareas pesadas en segundo plano (como el entrenamiento de bots).
 Autenticación
 La API utiliza un sistema de Tokens Bearer (OAuth2) para proteger los endpoints sensibles. El flujo es el siguiente:
-Registra un nuevo usuario con el endpoint POST /users/.
+Registra un nuevo  usuario con el endpoint POST /users/.
 Inicia sesión con ese usuario usando POST /token para obtener un access_token.
 Para todos los endpoints que requieran autenticación (marcados con un 🔒), debes incluir una cabecera (header) de la siguiente forma: Authorization: Bearer TU_ACCESS_TOKEN_AQUI
 Endpoints de la API

@@ -3,14 +3,14 @@ import shutil
 from fastapi import Depends, FastAPI, HTTPException, status, UploadFile, File
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
-from typing import List, Optional
+from typing import List
 from fastapi.responses import StreamingResponse
+from fastapi.middleware.cors import CORSMiddleware
 
 # --- Imports de nuestra aplicación ---
 from . import auth, crud, models, schemas
 from .database import engine, get_db
 from .core.orchestrator import Orchestrator
-# ¡Importamos nuestra app de Celery para poder usarla!
 from .worker import celery_app
 
 # Crea las tablas en la base de datos si no existen
@@ -19,7 +19,16 @@ models.Base.metadata.create_all(bind=engine)
 app = FastAPI(
     title="Bytchat SaaS API",
     description="API para la plataforma multi-tenant de Bytchat.",
-    version="1.4.0" # Subimos la versión
+    version="1.4.0"
+)
+
+# --- CONFIGURACIÓN DE CORS ---
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 # === Endpoints de Autenticación y Usuarios ===
@@ -82,7 +91,6 @@ def add_model_to_bot(
         raise HTTPException(status_code=403, detail="Bot no encontrado o no tienes permiso")
     return crud.add_model_config_to_bot(db=db, config=model_config, bot_id=bot_id)
 
-# --- Endpoint de Entrenamiento (AHORA CONECTADO A CELERY) ---
 @app.post("/bots/{bot_id}/train", tags=["Bots"])
 def train_bot_with_document(
     bot_id: int,
@@ -92,7 +100,6 @@ def train_bot_with_document(
 ):
     """
     Permite subir un documento de texto (.txt) para entrenar a un bot.
-    El procesamiento se realiza en segundo plano.
     """
     bot = db.query(models.Bot).filter(models.Bot.id == bot_id).first()
     if not bot or bot.owner_id != current_user.id:
@@ -104,16 +111,15 @@ def train_bot_with_document(
     with open(file_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
 
-    # ¡Aquí está la conexión! Lanzamos la tarea a nuestro worker.
     task = celery_app.send_task('process_and_index_documents_task', args=[bot_id, file_path])
     
-    return {"message": f"Archivo '{file.filename}' recibido. El entrenamiento para el bot {bot_id} ha comenzado.", "task_id": task.id}
+    return {"message": f"Archivo '{file.filename}' recibido para el bot {bot_id}. El entrenamiento ha comenzado.", "task_id": task.id}
 
-# === Endpoint de Chat (Aún no usa la memoria RAG) ===
+# === Endpoint de Chat (CORREGIDO) ===
 @app.post("/chat/{bot_id}", tags=["Chat"])
 def handle_chat(
     bot_id: int, 
-    query: str, 
+    chat_query: schemas.ChatQuery, # <--- ¡CAMBIO AQUÍ!
     db: Session = Depends(get_db),
     current_user: models.User = Depends(auth.get_current_user)
 ):
@@ -125,7 +131,12 @@ def handle_chat(
 
     bot_config_dict = schemas.Bot.from_orm(bot).model_dump()
     orchestrator = Orchestrator(bot_config=bot_config_dict, bot_id=bot_id)
-    text_stream_generator = orchestrator.handle_query(user_id=str(current_user.id), query=query)
+    
+    # Usamos la pregunta desde el objeto chat_query
+    text_stream_generator = orchestrator.handle_query(
+        user_id=str(current_user.id), 
+        query=chat_query.query # <--- ¡CAMBIO AQUÍ!
+    )
     
     return StreamingResponse(text_stream_generator, media_type="text/plain; charset=utf-8")
 

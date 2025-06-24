@@ -7,13 +7,13 @@ from jose import JWTError, jwt
 from passlib.context import CryptContext
 from sqlalchemy.orm import Session
 
-from . import crud
+from . import crud, models
 from .database import get_db
 
 # --- Configuración de Seguridad ---
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-SECRET_KEY = "un_secreto_muy_secreto_para_el_token" 
+SECRET_KEY = "un_secreto_muy_secreto_para_el_token"
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
@@ -53,3 +53,17 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
     if user is None:
         raise credentials_exception
     return user
+
+# --- NUEVA FUNCIÓN AÑADIDA ---
+def get_current_user_or_none(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)) -> Optional[models.User]:
+    """
+    Intenta obtener el usuario actual. Si el token no es válido o no existe,
+    en lugar de lanzar una excepción, devuelve None.
+    Esto es útil para endpoints que pueden ser accedidos por usuarios logueados y no logueados.
+    """
+    try:
+        # Reutiliza la lógica de get_current_user
+        return get_current_user(token, db)
+    except HTTPException:
+        # Si get_current_user lanza una excepción de credenciales, simplemente devuelve None
+        return None

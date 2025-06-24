@@ -1,1 +1,16 @@
-function App() { return <div className='bg-background text-foreground min-h-screen flex items-center justify-center'><h1 className='text-3xl font-bold'>Bytchat Panel - Configuracion Exitosa</h1></div> } export default App;
+import { Navigate, Outlet } from "react-router-dom";
+import { useAuthStore } from "./store/authStore";
+
+const App = () => {
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+
+  // Si el usuario no está autenticado, redirige a la página de login
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+
+  // Si está autenticado, muestra la página solicitada (el Dashboard)
+  return <Outlet />;
+};
+
+export default App;
