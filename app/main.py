@@ -51,6 +51,10 @@ def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
         raise HTTPException(status_code=400, detail="Email already registered")
     return crud.create_user(db=db, user=user)
 
+# --- Función auxiliar para obtener un bot de un usuario específico ---
+def get_bot(db: Session, bot_id: int, user_id: int):
+    return db.query(models.Bot).filter(models.Bot.id == bot_id, models.Bot.owner_id == user_id).first()
+
 # === Endpoints para la Gestión de Bots (Protegidos) ===
 @app.post("/bots/", response_model=schemas.Bot, tags=["Bots"])
 def create_bot_for_user(bot: schemas.BotCreate, db: Session = Depends(get_db), current_user: models.User = Depends(auth.get_current_user)):
@@ -60,6 +64,17 @@ def create_bot_for_user(bot: schemas.BotCreate, db: Session = Depends(get_db), c
 def read_user_bots(db: Session = Depends(get_db), current_user: models.User = Depends(auth.get_current_user)):
     bots = crud.get_bots_by_user(db, user_id=current_user.id)
     return bots
+
+@app.delete("/bots/{bot_id}", response_model=schemas.Bot, tags=["Bots"])
+def delete_bot(bot_id: int, db: Session = Depends(get_db), current_user: models.User = Depends(auth.get_current_user)):
+    """
+    Elimina un bot específico del usuario actual.
+    """
+    db_bot = get_bot(db=db, bot_id=bot_id, user_id=current_user.id)
+    if db_bot is None:
+        raise HTTPException(status_code=404, detail="Bot no encontrado o no tienes permiso")
+    
+    return crud.delete_bot(db=db, bot_id=bot_id)
 
 @app.put("/bots/{bot_id}", response_model=schemas.Bot, tags=["Bots"])
 def configure_bot(
@@ -71,8 +86,8 @@ def configure_bot(
     """
     Actualiza la configuración general de un bot (como su system_prompt).
     """
-    bot = db.query(models.Bot).filter(models.Bot.id == bot_id).first()
-    if not bot or bot.owner_id != current_user.id:
+    bot = get_bot(db=db, bot_id=bot_id, user_id=current_user.id)
+    if not bot:
         raise HTTPException(status_code=403, detail="Bot no encontrado o no tienes permiso")
     return crud.update_bot_config(db=db, bot=bot, config=config)
 
@@ -86,10 +101,40 @@ def add_model_to_bot(
     """
     Añade una nueva configuración de modelo (una 'herramienta') a la caja de un bot.
     """
-    bot = db.query(models.Bot).filter(models.Bot.id == bot_id).first()
-    if not bot or bot.owner_id != current_user.id:
+    bot = get_bot(db=db, bot_id=bot_id, user_id=current_user.id)
+    if not bot:
         raise HTTPException(status_code=403, detail="Bot no encontrado o no tienes permiso")
     return crud.add_model_config_to_bot(db=db, config=model_config, bot_id=bot_id)
+
+# Pega este nuevo endpoint en la sección de Bots de tu archivo app/main.py
+
+@app.delete("/bots/{bot_id}/models/{model_config_id}", response_model=schemas.BotModelConfig, tags=["Bots"])
+def remove_model_from_bot(
+    bot_id: int,
+    model_config_id: int,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(auth.get_current_user)
+):
+    """
+    Elimina una configuración de modelo específica (una 'herramienta') de la caja de un bot.
+    """
+    # 1. Verificar que el bot pertenece al usuario actual
+    bot = get_bot(db=db, bot_id=bot_id, user_id=current_user.id)
+    if not bot:
+        raise HTTPException(status_code=403, detail="Bot no encontrado o no tienes permiso")
+
+    # 2. Verificar que la configuración del modelo pertenece al bot correcto
+    model_config = db.query(models.BotModelConfig).filter(
+        models.BotModelConfig.id == model_config_id,
+        models.BotModelConfig.bot_id == bot_id
+    ).first()
+
+    if not model_config:
+        raise HTTPException(status_code=404, detail="Configuración de modelo no encontrada para este bot")
+
+    # 3. Si todo está bien, eliminar la configuración
+    deleted_config = crud.delete_bot_model_config(db=db, model_config_id=model_config_id)
+    return deleted_config
 
 @app.post("/bots/{bot_id}/train", tags=["Bots"])
 def train_bot_with_document(
@@ -101,8 +146,8 @@ def train_bot_with_document(
     """
     Permite subir un documento de texto (.txt) para entrenar a un bot.
     """
-    bot = db.query(models.Bot).filter(models.Bot.id == bot_id).first()
-    if not bot or bot.owner_id != current_user.id:
+    bot = get_bot(db=db, bot_id=bot_id, user_id=current_user.id)
+    if not bot:
         raise HTTPException(status_code=403, detail="Bot no encontrado o no tienes permiso")
 
     upload_folder = "temp_uploads"
@@ -119,23 +164,21 @@ def train_bot_with_document(
 @app.post("/chat/{bot_id}", tags=["Chat"])
 def handle_chat(
     bot_id: int, 
-    chat_query: schemas.ChatQuery, # <--- ¡CAMBIO AQUÍ!
+    chat_query: schemas.ChatQuery,
     db: Session = Depends(get_db),
+    # Aquí estaba el otro typo, ya corregido:
     current_user: models.User = Depends(auth.get_current_user)
 ):
-    bot = db.query(models.Bot).filter(models.Bot.id == bot_id).first()
+    bot = get_bot(db=db, bot_id=bot_id, user_id=current_user.id)
     if not bot:
-        raise HTTPException(status_code=404, detail="Bot no encontrado")
-    if bot.owner_id != current_user.id:
-        raise HTTPException(status_code=403, detail="No tienes permiso")
+        raise HTTPException(status_code=404, detail="Bot no encontrado o no tienes permiso")
 
     bot_config_dict = schemas.Bot.from_orm(bot).model_dump()
     orchestrator = Orchestrator(bot_config=bot_config_dict, bot_id=bot_id)
     
-    # Usamos la pregunta desde el objeto chat_query
     text_stream_generator = orchestrator.handle_query(
         user_id=str(current_user.id), 
-        query=chat_query.query # <--- ¡CAMBIO AQUÍ!
+        query=chat_query.query
     )
     
     return StreamingResponse(text_stream_generator, media_type="text/plain; charset=utf-8")
