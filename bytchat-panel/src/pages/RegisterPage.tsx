@@ -1,47 +1,54 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuthStore } from '@/store/authStore';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Icons } from '@/components/ui/icons'; // <-- Importamos los iconos
-import axios from 'axios';
 
-const LoginPage = () => {
+const RegisterPage = () => {
   const navigate = useNavigate();
-  const login = useAuthStore((state) => state.login);
-  const [email, setEmail] = useState('test@example.com');
-  const [password, setPassword] = useState('string');
+  const [fullName, setFullName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
     setError(null);
-    const formData = new URLSearchParams();
-    formData.append('username', email);
-    formData.append('password', password);
+    setSuccess(null);
     try {
-      const response = await axios.post('/api/token', formData, {
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      const response = await fetch('/api/users/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ full_name: fullName, email: email, password: password }),
       });
-      login(response.data.access_token);
-      navigate('/');
-    } catch (err) {
-      setError('Email o contraseña incorrectos.');
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.detail || 'Error al crear la cuenta.');
+      }
+      setSuccess('¡Cuenta creada! Serás redirigido al login.');
+      setTimeout(() => navigate('/login'), 2000);
+    } catch (err: any) {
+      setError(err.message);
     }
   };
 
   return (
     <div className="w-full lg:grid lg:min-h-screen lg:grid-cols-2">
-      <div className="flex items-center justify-center py-12">
+       <div className="flex items-center justify-center py-12">
         <div className="mx-auto grid w-[350px] gap-6">
           <div className="grid gap-2 text-center">
-            <h1 className="text-3xl font-bold">Inicia Sesión</h1>
+            <h1 className="text-3xl font-bold">Crea tu Cuenta</h1>
             <p className="text-balance text-muted-foreground">
-              Ingresa tu email para acceder a tu panel.
+              Bienvenido. Completa el formulario para empezar.
             </p>
           </div>
-          <form onSubmit={handleLogin} className="grid gap-4">
+          <form onSubmit={handleSubmit} className="grid gap-4">
+            <div className="grid gap-2">
+              <Label htmlFor="full-name">Nombre Completo</Label>
+              <Input id="full-name" placeholder="John Doe" required value={fullName} onChange={(e) => setFullName(e.target.value)} />
+            </div>
             <div className="grid gap-2">
               <Label htmlFor="email">Email</Label>
               <Input id="email" type="email" placeholder="m@ejemplo.com" required value={email} onChange={(e) => setEmail(e.target.value)} />
@@ -51,12 +58,13 @@ const LoginPage = () => {
               <Input id="password" type="password" required value={password} onChange={(e) => setPassword(e.target.value)} />
             </div>
             {error && <p className="text-sm text-red-600">{error}</p>}
+            {success && <p className="text-sm text-green-600">{success}</p>}
             <Button type="submit" className="w-full">
-              Entrar
+              Crear Cuenta
             </Button>
           </form>
-          {/* --- Divisor y Botones Sociales --- */}
-          <div className="relative my-2">
+           {/* --- Divisor y Botones Sociales --- */}
+           <div className="relative my-2">
             <div className="absolute inset-0 flex items-center">
               <span className="w-full border-t" />
             </div>
@@ -75,9 +83,9 @@ const LoginPage = () => {
             </Button>
           </div>
           <div className="mt-4 text-center text-sm">
-            ¿No tienes una cuenta?{' '}
-            <Link to="/register" className="underline">
-              Regístrate
+            ¿Ya tienes una cuenta?{' '}
+            <Link to="/login" className="underline">
+              Inicia Sesión
             </Link>
           </div>
         </div>
@@ -95,4 +103,4 @@ const LoginPage = () => {
   );
 };
 
-export default LoginPage;
+export default RegisterPage;

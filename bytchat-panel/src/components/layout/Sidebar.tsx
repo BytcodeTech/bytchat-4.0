@@ -1,7 +1,19 @@
+import { useNavigate } from 'react-router-dom'; // <-- 1. Importamos useNavigate
 import { BotMessageSquare, BrainCircuit, BarChart3, CreditCard, LogOut, Settings } from 'lucide-react';
 import NavButton from '@/components/ui/NavButton';
+import { useAuthStore } from '@/store/authStore'; // <-- 2. Importamos el store
 
 const Sidebar = () => {
+  // --- 3. Preparamos la lógica de logout ---
+  const { logout } = useAuthStore();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
+  // ------------------------------------
+
   return (
     <aside className="hidden md:flex flex-col w-64 bg-slate-800 text-white">
       {/* --- Logo Header --- */}
@@ -21,9 +33,10 @@ const Sidebar = () => {
       </nav>
 
       {/* --- Footer Navigation --- */}
-      <div className="p-4 border-t border-slate-700">
+      <div className="p-4 border-t border-slate-700 space-y-2">
         <NavButton icon={Settings} label="Configuración" />
-        <NavButton icon={LogOut} label="Cerrar Sesión" />
+        {/* --- 4. Aplicamos el onClick al botón correcto --- */}
+        <NavButton icon={LogOut} label="Cerrar Sesión" onClick={handleLogout} />
       </div>
     </aside>
   );

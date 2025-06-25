@@ -1,4 +1,4 @@
-import { Menu, Search, Bell } from 'lucide-react';
+import { Menu, Search, Bell, CircleUser } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
@@ -26,9 +26,9 @@ const Header = () => {
           <Bell className="h-5 w-5" />
           <span className="sr-only">Notificaciones</span>
         </Button>
-        {/* User Avatar - Placeholder */}
-        <div className="h-9 w-9 rounded-full bg-slate-200 flex items-center justify-center text-slate-600 font-semibold">
-          U
+        {/* User Avatar - Vuelve a ser solo un placeholder visual */}
+        <div className="h-9 w-9 rounded-full bg-slate-200 flex items-center justify-center">
+           <CircleUser className="h-6 w-6 text-slate-600" />
         </div>
       </div>
     </header>
