@@ -1,29 +1,42 @@
-import { Navigate, Outlet } from "react-router-dom";
-import { useAuthStore } from "./store/authStore";
-import Sidebar from "./components/layout/Sidebar";
-import Header from "./components/layout/Header";
+// bytchat-panel/src/App.tsx
+import { useEffect } from 'react';
+import { Outlet, useNavigate, useLocation } from 'react-router-dom';
+import { useAuthStore } from './store/authStore';
+import Sidebar from './components/layout/Sidebar';
+import Header from './components/layout/Header';
+import { Toaster } from 'sonner'; // <-- 1. IMPORTAR TOASTER
 
-const App = () => {
-  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+function App() {
+  const { token, checkAuth } = useAuthStore();
+  const navigate = useNavigate();
+  const location = useLocation();
 
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
+  useEffect(() => {
+    checkAuth();
+    if (!token) {
+      navigate('/login');
+    }
+  }, [token, navigate, checkAuth]);
+
+  if (!token) {
+    return null; 
   }
 
-  // Si está autenticado, muestra la plantilla principal del panel.
+  const isDashboard = location.pathname === '/dashboard';
+
   return (
     <div className="flex h-screen bg-slate-50">
       <Sidebar />
-      {/* --- EL CAMBIO ESTÁ EN ESTA LÍNEA --- */}
-      {/* Quitamos la clase 'overflow-hidden' para permitir que el contenido se expanda */}
-      <div className="flex flex-1 flex-col">
+      <div className="flex-1 flex flex-col overflow-hidden">
         <Header />
-        <main className="flex-1 overflow-y-auto bg-slate-100 p-6 md:p-8 lg:p-10">
+        <main className="flex-1 overflow-x-hidden overflow-y-auto p-6">
           <Outlet />
         </main>
       </div>
+      {/* 2. AÑADIR EL COMPONENTE TOASTER AQUÍ */}
+      <Toaster richColors position="top-right" />
     </div>
   );
-};
+}
 
 export default App;
