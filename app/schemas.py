@@ -1,16 +1,14 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import List, Optional
 
-# --- Schemas para la Configuración de Modelos ---
-
+# --- Schemas de BotModelConfig ---
 class BotModelConfigBase(BaseModel):
-    task_type: str = "general"
-    provider: str
-    model_id: str
-    is_active: bool = True
+    provider: str = Field(..., example="google")
+    model_id: str = Field(..., example="gemini-1.5-pro-latest")
+    task_type: str = "general" # Campo añadido para la lógica del frontend
 
 class BotModelConfigCreate(BotModelConfigBase):
-    pass 
+    pass
 
 class BotModelConfig(BotModelConfigBase):
     id: int
@@ -18,29 +16,29 @@ class BotModelConfig(BotModelConfigBase):
     class Config:
         from_attributes = True
 
-# --- Schema para actualizar el prompt de un bot ---
-class BotConfigUpdate(BaseModel):
-    system_prompt: Optional[str] = None
-
 # --- Schemas de Bot ---
-
 class BotBase(BaseModel):
-    name: str
-    description: Optional[str] = None
+    name: str = Field(..., example="Asistente de Ventas")
+    description: Optional[str] = Field(None, example="Un bot para ayudar con las ventas")
+    system_prompt: Optional[str] = Field("Eres un asistente de IA muy servicial.", example="Eres un experto en ventas de coches.")
 
 class BotCreate(BotBase):
-    initial_configs: Optional[List[BotModelConfigCreate]] = None
+    pass
+
+class BotUpdate(BaseModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
+    system_prompt: Optional[str] = None
 
 class Bot(BotBase):
     id: int
     owner_id: int
     system_prompt: str
     model_configs: List[BotModelConfig] = []
-
     class Config:
         from_attributes = True
 
-# --- Schemas para Usuarios ---
+# --- Schemas de User ---
 class UserBase(BaseModel):
     email: str
 
@@ -51,21 +49,16 @@ class User(UserBase):
     id: int
     is_active: bool
     bots: List[Bot] = []
-
     class Config:
         from_attributes = True
 
-class TokenData(BaseModel):
-    email: Optional[str] = None
-
+# --- Schemas de Token y Chat ---
 class Token(BaseModel):
     access_token: str
     token_type: str
 
-# --- SCHEMA AÑADIDO PARA EL CHAT ---
-class ChatRequest(BaseModel):
-    query: str
+class TokenData(BaseModel):
+    email: Optional[str] = None
 
-    # --- Nuevo Schema para las Peticiones de Chat ---
 class ChatQuery(BaseModel):
     query: str

@@ -19,20 +19,25 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import EditBotModal, { BotUpdateData } from '@/components/modals/EditBotModal';
 
 const BotsPage = () => {
   const [bots, setBots] = useState<Bot[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  
+
+  // Estados para los modales
   const [selectedBot, setSelectedBot] = useState<Bot | null>(null);
-  const [isToolboxModalOpen, setIsToolboxModalOpen] = useState(false);
+  const [botToEdit, setBotToEdit] = useState<Bot | null>(null);
+  const [botToDelete, setBotToDelete] = useState<Bot | null>(null);
   
+  const [isToolboxModalOpen, setIsToolboxModalOpen] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const [botToDelete, setBotToDelete] = useState<Bot | null>(null);
-
+  // Carga inicial de bots
   useEffect(() => {
     const fetchBots = async () => {
       try {
@@ -50,57 +55,38 @@ const BotsPage = () => {
     fetchBots();
   }, []);
 
+  // --- MANEJADORES PARA EL TOOLBOX ---
   const handleOpenToolboxModal = (bot: Bot) => {
     setSelectedBot(bot);
     setIsToolboxModalOpen(true);
   };
-
   const handleCloseToolboxModal = () => {
     setIsToolboxModalOpen(false);
     setSelectedBot(null);
   };
-
   const handleAddModel = async (model: Model) => {
     if (!selectedBot) return;
     try {
-      const response = await api.post<ModelConfig>(`/bots/${selectedBot.id}/models/`, {
-        provider: model.provider,
-        model_id: model.id,
-        task_type: model.task_type,
-      });
+      const response = await api.post<ModelConfig>(`/bots/${selectedBot.id}/models/`, { provider: model.provider, model_id: model.id, task_type: model.task_type });
       const newModelConfig = response.data;
-      const updateBots = (prevBots: Bot[]) => 
-        prevBots.map(b => 
-          b.id === selectedBot.id 
-            ? { ...b, model_configs: [...b.model_configs, newModelConfig] }
-            : b
-        );
+      const updateBots = (prev: Bot[]) => prev.map(b => b.id === selectedBot.id ? { ...b, model_configs: [...b.model_configs, newModelConfig] } : b);
       setBots(updateBots);
       setSelectedBot(prev => prev ? updateBots([prev])[0] : null);
       toast.success(`Modelo "${model.name}" añadido.`);
-    } catch (err) {
-      toast.error("No se pudo añadir el modelo.");
-    }
+    } catch (err) { toast.error("No se pudo añadir el modelo."); }
   };
-  
   const handleRemoveModel = async (modelConfig: ModelConfig) => {
     if (!selectedBot) return;
     try {
       await api.delete(`/bots/${selectedBot.id}/models/${modelConfig.id}`);
-      const updateBots = (prevBots: Bot[]) =>
-        prevBots.map(b => 
-          b.id === selectedBot.id
-            ? { ...b, model_configs: b.model_configs.filter(mc => mc.id !== modelConfig.id) }
-            : b
-        );
+      const updateBots = (prev: Bot[]) => prev.map(b => b.id === selectedBot.id ? { ...b, model_configs: b.model_configs.filter(mc => mc.id !== modelConfig.id) } : b);
       setBots(updateBots);
       setSelectedBot(prev => prev ? updateBots([prev])[0] : null);
       toast.info(`Modelo "${modelConfig.model_id}" eliminado.`);
-    } catch (err) {
-      toast.error("No se pudo eliminar el modelo.");
-    }
+    } catch (err) { toast.error("No se pudo eliminar el modelo."); }
   };
 
+  // --- MANEJADORES PARA CREAR BOT ---
   const handleCreateBot = async (data: BotCreateData) => {
     setIsSubmitting(true);
     try {
@@ -109,33 +95,44 @@ const BotsPage = () => {
       setBots(prev => [newBot, ...prev]);
       setIsCreateModalOpen(false);
       toast.success(`Bot "${newBot.name}" creado con éxito.`);
-    } catch (err) {
-      toast.error("No se pudo crear el bot.");
-    } finally {
-      setIsSubmitting(false);
-    }
+    } catch (err) { toast.error("No se pudo crear el bot."); } finally { setIsSubmitting(false); }
   };
 
+  // --- MANEJADORES PARA EDITAR BOT ---
+  const handleOpenEditModal = (bot: Bot) => {
+    setBotToEdit(bot);
+    setIsEditModalOpen(true);
+  };
+  const handleCloseEditModal = () => {
+    setIsEditModalOpen(false);
+    setBotToEdit(null);
+  };
+  const handleUpdateBot = async (data: BotUpdateData) => {
+    if (!botToEdit) return;
+    setIsSubmitting(true);
+    try {
+      const response = await api.put<Bot>(`/bots/${botToEdit.id}`, data);
+      const updatedBot = response.data;
+      setBots(prev => prev.map(b => b.id === updatedBot.id ? updatedBot : b));
+      handleCloseEditModal();
+      toast.success(`Bot "${updatedBot.name}" actualizado.`);
+    } catch (err) { toast.error("No se pudo actualizar el bot."); } finally { setIsSubmitting(false); }
+  };
+
+  // --- MANEJADORES PARA ELIMINAR BOT ---
   const handleDeleteBot = async () => {
     if (!botToDelete) return;
     try {
       await api.delete(`/bots/${botToDelete.id}`);
       setBots(prev => prev.filter(b => b.id !== botToDelete.id));
       toast.success(`Bot "${botToDelete.name}" eliminado.`);
-    } catch (err) {
-      toast.error("No se pudo eliminar el bot.");
-    } finally {
-      setBotToDelete(null);
-    }
+    } catch (err) { toast.error("No se pudo eliminar el bot."); } finally { setBotToDelete(null); }
   };
 
+  // --- RENDERIZADO DEL CONTENIDO PRINCIPAL ---
   const renderContent = () => {
-    if (isLoading) {
-      return <div className="flex justify-center items-center h-64"><Loader2 className="h-8 w-8 animate-spin text-slate-500" /></div>;
-    }
-    if (error) {
-      return <div className="flex flex-col items-center text-center h-64 justify-center bg-red-50 text-red-700 rounded-lg"><ServerCrash className="h-12 w-12 mb-4" /><h2 className="text-xl font-semibold">Error</h2><p>{error}</p></div>;
-    }
+    if (isLoading) { return <div className="flex justify-center items-center h-64"><Loader2 className="h-8 w-8 animate-spin text-slate-500" /></div>; }
+    if (error) { return <div className="flex flex-col items-center text-center h-64 justify-center bg-red-50 text-red-700 rounded-lg"><ServerCrash className="h-12 w-12 mb-4" /><h2 className="text-xl font-semibold">Error</h2><p>{error}</p></div>; }
     if (bots.length === 0) {
       return (
         <div className="text-center py-16 border-2 border-dashed rounded-lg">
@@ -148,7 +145,7 @@ const BotsPage = () => {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {bots.map((bot) => (
-          <BotCard key={bot.id} bot={bot} onManageClick={() => handleOpenToolboxModal(bot)} onDeleteClick={() => setBotToDelete(bot)} />
+          <BotCard key={bot.id} bot={bot} onManageClick={() => handleOpenToolboxModal(bot)} onDeleteClick={() => setBotToDelete(bot)} onEditClick={() => handleOpenEditModal(bot)} />
         ))}
       </div>
     );
@@ -169,27 +166,12 @@ const BotsPage = () => {
       
       <ToolboxModal bot={selectedBot} isOpen={isToolboxModalOpen} onClose={handleCloseToolboxModal} onAddModel={handleAddModel} onRemoveModel={handleRemoveModel} />
       <CreateBotModal isOpen={isCreateModalOpen} onClose={() => setIsCreateModalOpen(false)} onSubmit={handleCreateBot} isSubmitting={isSubmitting} />
+      <EditBotModal isOpen={isEditModalOpen} onClose={handleCloseEditModal} onSubmit={handleUpdateBot} isSubmitting={isSubmitting} bot={botToEdit} />
       
       <AlertDialog open={!!botToDelete} onOpenChange={() => setBotToDelete(null)}>
-        {/* --- DIÁLOGO DE ALERTA CON ESTILOS MEJORADOS --- */}
         <AlertDialogContent className="bg-white border rounded-lg shadow-lg p-6">
-          <AlertDialogHeader className="pb-4">
-            <AlertDialogTitle className="text-lg font-semibold text-slate-800">¿Estás absolutamente seguro?</AlertDialogTitle>
-            <AlertDialogDescription className="text-slate-600">
-              Esta acción no se puede deshacer. Esto eliminará permanentemente el bot
-              <span className="font-semibold text-slate-900"> {botToDelete?.name} </span> 
-              y todos sus datos.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter className="pt-4 flex justify-end gap-3">
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDeleteBot}
-              className="bg-red-600 hover:bg-red-700 text-white"
-            >
-              Sí, eliminar bot
-            </AlertDialogAction>
-          </AlertDialogFooter>
+          <AlertDialogHeader className="pb-4"><AlertDialogTitle className="text-lg font-semibold text-slate-800">¿Estás absolutamente seguro?</AlertDialogTitle><AlertDialogDescription className="text-slate-600">Esta acción no se puede deshacer. Esto eliminará permanentemente el bot<span className="font-semibold text-slate-900"> {botToDelete?.name} </span> y todos sus datos.</AlertDialogDescription></AlertDialogHeader>
+          <AlertDialogFooter className="pt-4 flex justify-end gap-3"><AlertDialogCancel>Cancelar</AlertDialogCancel><AlertDialogAction onClick={handleDeleteBot} className="bg-red-600 hover:bg-red-700 text-white">Sí, eliminar bot</AlertDialogAction></AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
     </>
