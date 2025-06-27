@@ -6,13 +6,13 @@ import { Bot } from '@/types';
 
 interface BotCardProps {
   bot: Bot;
-  onManageClick: () => void; // <-- 1. AÑADIR LA PROP
+  onManageClick: () => void;
+  onDeleteClick: () => void;
 }
 
-const BotCard = ({ bot, onManageClick }: BotCardProps) => { // <-- 2. RECIBIR LA PROP
+const BotCard = ({ bot, onManageClick, onDeleteClick }: BotCardProps) => {
   return (
     <Card className="flex flex-col">
-      {/* ... CardHeader y CardContent se mantienen igual ... */}
       <CardHeader>
         <div className="flex items-start justify-between">
             <CardTitle className="font-bold text-slate-800">{bot.name}</CardTitle>
@@ -38,10 +38,9 @@ const BotCard = ({ bot, onManageClick }: BotCardProps) => { // <-- 2. RECIBIR LA
         </div>
       </CardContent>
       <CardFooter className="flex justify-end gap-2">
-        <Button variant="ghost" size="sm" className="text-slate-600">
+        <Button variant="ghost" size="icon" className="text-slate-500 hover:text-red-600 hover:bg-red-50" onClick={onDeleteClick}>
             <Trash2 className="h-4 w-4" />
         </Button>
-        {/* --- 3. LLAMAR A LA FUNCIÓN EN EL EVENTO onClick --- */}
         <Button variant="outline" size="sm" onClick={onManageClick}>
           <Settings className="mr-2 h-4 w-4" />
           Gestionar
