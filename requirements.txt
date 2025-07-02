@@ -30,3 +30,5 @@
     pydantic-settings
     passlib[bcrypt]
     python-jose[cryptography]
+
+    langchain-google-genai

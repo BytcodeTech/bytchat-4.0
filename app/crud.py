@@ -1,5 +1,6 @@
 from sqlalchemy.orm import Session
 from . import models, schemas, auth
+from typing import List 
 
 # --- User CRUD ---
 def get_user(db: Session, user_id: int):
@@ -62,3 +63,36 @@ def delete_bot_model_config(db: Session, model_config_id: int):
         db.delete(db_config)
         db.commit()
     return db_config
+
+def get_documents_by_bot(db: Session, bot_id: int, skip: int = 0, limit: int = 100) -> List[models.Document]:
+    """
+    Obtiene todos los documentos asociados a un bot.
+    """
+    return db.query(models.Document).filter(models.Document.bot_id == bot_id).offset(skip).limit(limit).all()
+
+def create_bot_document(db: Session, doc: schemas.DocumentCreate) -> models.Document:
+    """
+    Crea un nuevo registro de documento para un bot.
+    """
+    db_doc = models.Document(
+        filename=doc.filename,
+        file_type=doc.file_type,
+        file_size=doc.file_size,
+        bot_id=doc.bot_id,
+        status=models.DocumentStatus.PENDING # Estado inicial
+    )
+    db.add(db_doc)
+    db.commit()
+    db.refresh(db_doc)
+    return db_doc
+
+def update_document_status(db: Session, doc_id: int, status: models.DocumentStatus):
+    """
+    Actualiza el estado de un documento.
+    """
+    db_doc = db.query(models.Document).filter(models.Document.id == doc_id).first()
+    if db_doc:
+        db_doc.status = status
+        db.commit()
+        db.refresh(db_doc)
+    return db_doc

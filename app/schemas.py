@@ -1,5 +1,8 @@
 from pydantic import BaseModel, Field
 from typing import List, Optional
+from datetime import datetime
+from .models import DocumentStatus # Importar el Enum
+
 
 # --- Schemas de BotModelConfig ---
 class BotModelConfigBase(BaseModel):
@@ -14,7 +17,32 @@ class BotModelConfig(BotModelConfigBase):
     id: int
     bot_id: int
     class Config:
-        from_attributes = True
+        from_attributes = True 
+
+class DocumentBase(BaseModel):
+    filename: str
+    file_type: Optional[str] = None
+    file_size: Optional[int] = None
+
+class DocumentCreate(DocumentBase):
+    bot_id: int
+
+class DocumentUpdate(BaseModel):
+    status: Optional[DocumentStatus] = None
+    vector_index_path: Optional[str] = None
+    chunks_map_path: Optional[str] = None
+
+class Document(DocumentBase):
+    id: int
+    bot_id: int
+    status: DocumentStatus
+    uploaded_at: datetime
+    vector_index_path: Optional[str] = None
+    chunks_map_path: Optional[str] = None
+
+    class Config:
+        from_attributes = True # Cambiado de orm_mode
+
 
 # --- Schemas de Bot ---
 class BotBase(BaseModel):
@@ -34,9 +62,10 @@ class Bot(BotBase):
     id: int
     owner_id: int
     system_prompt: str
-    model_configs: List[BotModelConfig] = []
+    model_configs: List[BotModelConfig] = [] 
+    documents: List[Document] = [] 
     class Config:
-        from_attributes = True
+        from_attributes = True  # Cambiado de orm_mode
 
 # --- Schemas de User ---
 class UserBase(BaseModel):

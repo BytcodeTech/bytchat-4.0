@@ -13,6 +13,7 @@ from .database import engine, get_db
 from .core.orchestrator import Orchestrator
 from .worker import celery_app
 
+
 # Crea las tablas en la base de datos si no existen
 models.Base.metadata.create_all(bind=engine)
 
@@ -160,7 +161,54 @@ def handle_chat(
     
     return StreamingResponse(text_stream_generator, media_type="text/plain; charset=utf-8")
 
-# === Endpoint de Bienvenida ===
-@app.get("/", tags=["Root"])
-def read_root():
-    return {"message": "Bienvenido a la API de Bytchat SaaS v1.4.0. Ve a /docs para ver la documentación interactiva."}
+
+# === Endpoints para Gestión de Documentos (Entrenamiento) ===
+
+@app.get("/bots/{bot_id}/documents/", response_model=List[schemas.Document], tags=["Bots"])
+def read_bot_documents(
+    bot_id: int, 
+    db: Session = Depends(get_db), 
+    current_user: models.User = Depends(auth.get_current_user)
+):
+    """
+    Obtiene la lista de documentos de un bot específico.
+    """
+    bot = get_bot(db, bot_id=bot_id, user_id=current_user.id)
+    return crud.get_documents_by_bot(db=db, bot_id=bot.id)
+
+
+# Este endpoint reemplaza y mejora el endpoint de /train que tenías
+@app.post("/bots/{bot_id}/documents/upload", response_model=schemas.Document, tags=["Bots"])
+def upload_document_for_training(
+    bot_id: int,
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(auth.get_current_user)
+):
+    """
+    Sube un archivo, crea el registro del documento y lanza la tarea de entrenamiento.
+    """
+    bot = get_bot(db, bot_id=bot_id, user_id=current_user.id)
+    
+    # 1. Crear el registro del documento en la BD
+    doc_in = schemas.DocumentCreate(
+        filename=file.filename,
+        file_type=file.content_type,
+        file_size=file.size,
+        bot_id=bot_id
+    )
+    db_document = crud.create_bot_document(db=db, doc=doc_in)
+
+    # 2. Guardar el archivo físicamente
+    upload_folder = f"temp_uploads/{bot_id}"
+    os.makedirs(upload_folder, exist_ok=True)
+    
+    file_path = os.path.join(upload_folder, f"doc_{db_document.id}_{file.filename}")
+
+    with open(file_path, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+
+    # 3. Lanzar la tarea de Celery
+    task = celery_app.send_task('process_document_task', args=[bot_id, file_path, db_document.id])
+    
+    return db_document
