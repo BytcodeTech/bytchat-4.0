@@ -49,6 +49,9 @@ def delete_bot(db: Session, bot_id: int):
         db.commit()
     return db_bot
 
+def get_bot(db: Session, bot_id: int, user_id: int):
+    return db.query(models.Bot).filter(models.Bot.id == bot_id, models.Bot.owner_id == user_id).first()
+
 # --- BotModelConfig CRUD ---
 def add_model_config_to_bot(db: Session, config: schemas.BotModelConfigCreate, bot_id: int):
     db_config = models.BotModelConfig(**config.dict(), bot_id=bot_id)

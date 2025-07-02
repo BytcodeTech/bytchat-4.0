@@ -16,6 +16,7 @@ class BotModelConfigCreate(BotModelConfigBase):
 class BotModelConfig(BotModelConfigBase):
     id: int
     bot_id: int
+    is_active: bool 
     class Config:
         from_attributes = True 
 

@@ -1,1 +1,6 @@
 @tailwind base; @tailwind components; @tailwind utilities;
+
+/* Forzar z-index alto para el portal de Radix UI (shadcn/ui) */
+[data-radix-popper-content-wrapper] {
+  z-index: 9999 !important;
+}

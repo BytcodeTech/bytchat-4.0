@@ -1,6 +1,6 @@
 import os
 import shutil
-from fastapi import Depends, FastAPI, HTTPException, status, UploadFile, File, Response
+from fastapi import Depends, FastAPI, HTTPException, status, UploadFile, File, Response, Path
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from typing import List
@@ -142,25 +142,31 @@ def train_bot_with_document(
     return {"message": f"Archivo '{file.filename}' recibido para el bot {bot_id}. El entrenamiento ha comenzado.", "task_id": task.id}
 
 # === Endpoint de Chat (CORREGIDO) ===
+
 @app.post("/chat/{bot_id}", tags=["Chat"])
-def handle_chat(
+async def handle_chat(
     bot_id: int, 
     chat_query: schemas.ChatQuery,
     db: Session = Depends(get_db),
     current_user: models.User = Depends(auth.get_current_user)
 ):
-    bot = get_bot(db=db, bot_id=bot_id, user_id=current_user.id)
+    bot = crud.get_bot(db=db, bot_id=bot_id, user_id=current_user.id)
+    if not bot:
+        raise HTTPException(status_code=404, detail="Bot no encontrado o no tienes permiso.")
 
+    # Usamos model_dump() para convertir el objeto a un diccionario de forma segura
     bot_config_dict = schemas.Bot.from_orm(bot).model_dump()
-    orchestrator = Orchestrator(bot_config=bot_config_dict, bot_id=bot_id)
-    
+
+    # Le pasamos la sesión 'db' al crear el orquestador
+    orchestrator = Orchestrator(db=db, bot_config=bot_config_dict, bot_id=bot_id)
+
     text_stream_generator = orchestrator.handle_query(
         user_id=str(current_user.id), 
         query=chat_query.query
     )
-    
-    return StreamingResponse(text_stream_generator, media_type="text/plain; charset=utf-8")
 
+    return StreamingResponse(text_stream_generator, media_type="text/plain; charset=utf-8")
+    
 
 # === Endpoints para Gestión de Documentos (Entrenamiento) ===
 
@@ -212,3 +218,23 @@ def upload_document_for_training(
     task = celery_app.send_task('process_document_task', args=[bot_id, file_path, db_document.id])
     
     return db_document
+
+@app.delete("/bots/{bot_id}/documents/{document_id}", status_code=status.HTTP_204_NO_CONTENT, tags=["Bots"])
+def delete_bot_document(
+    bot_id: int,
+    document_id: int = Path(..., description="ID del documento a eliminar"),
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(auth.get_current_user)
+):
+    bot = get_bot(db, bot_id=bot_id, user_id=current_user.id)
+    doc = db.query(models.Document).filter(models.Document.id == document_id, models.Document.bot_id == bot_id).first()
+    if not doc:
+        raise HTTPException(status_code=404, detail="Documento no encontrado para este bot")
+    # Eliminar archivo físico e índice si existen
+    if doc.vector_index_path and os.path.exists(doc.vector_index_path):
+        os.remove(doc.vector_index_path)
+    if hasattr(doc, 'file_path') and doc.file_path and os.path.exists(doc.file_path):
+        os.remove(doc.file_path)
+    db.delete(doc)
+    db.commit()
+    return Response(status_code=status.HTTP_204_NO_CONTENT)

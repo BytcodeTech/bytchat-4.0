@@ -8,6 +8,7 @@ import LoginPage from './pages/LoginPage.tsx';
 import DashboardPage from './pages/DashboardPage.tsx';
 import RegisterPage from './pages/RegisterPage.tsx';
 import BotsPage from './pages/BotsPage.tsx'; // <-- 1. IMPORTAR LA NUEVA PÁGINA
+import TrainingPage from './pages/TrainingPage'; // <-- Importar la nueva página
 
 const router = createBrowserRouter([
   {
@@ -21,6 +22,10 @@ const router = createBrowserRouter([
       {
         path: 'bots', // <-- 3. AÑADIMOS LA RUTA PARA LOS BOTS
         element: <BotsPage />,
+      },
+      {
+        path: 'training', // <-- Añadir la ruta de entrenamiento
+        element: <TrainingPage />, 
       },
       {
         index: true, // <-- 4. REDIRIGIMOS LA RUTA RAÍZ A /bots

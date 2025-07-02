@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom'; // <-- 1. Importamos useNavigate
+import { useNavigate, useLocation } from 'react-router-dom'; // <-- 1. Importamos useLocation
 import { BotMessageSquare, BrainCircuit, BarChart3, CreditCard, LogOut, Settings } from 'lucide-react';
 import NavButton from '@/components/ui/NavButton';
 import { useAuthStore } from '@/store/authStore'; // <-- 2. Importamos el store
@@ -7,6 +7,7 @@ const Sidebar = () => {
   // --- 3. Preparamos la lógica de logout ---
   const { logout } = useAuthStore();
   const navigate = useNavigate();
+  const { pathname } = useLocation();
 
   const handleLogout = () => {
     logout();
@@ -26,8 +27,18 @@ const Sidebar = () => {
 
       {/* --- Main Navigation --- */}
       <nav className="flex-1 p-4 space-y-2">
-        <NavButton icon={BotMessageSquare} label="Mis Bots" isActive />
-        <NavButton icon={BrainCircuit} label="Entrenamiento" />
+        <NavButton
+          icon={BotMessageSquare}
+          label="Mis Bots"
+          isActive={pathname.startsWith('/bots') || pathname === '/'}
+          onClick={() => navigate('/bots')}
+        />
+        <NavButton
+          icon={BrainCircuit}
+          label="Entrenamiento"
+          isActive={pathname.startsWith('/training')}
+          onClick={() => navigate('/training')}
+        />
         <NavButton icon={BarChart3} label="Analíticas" />
         <NavButton icon={CreditCard} label="Facturación" />
       </nav>

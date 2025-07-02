@@ -1,6 +1,7 @@
 import google.generativeai as genai
 # Importamos nuestro objeto de configuración centralizado
 from ..config import settings
+from app.connectors.base_connector import BaseConnector
 
 class GoogleConnector:
     def __init__(self):
