@@ -1,11 +1,13 @@
 import os
 import shutil
-from fastapi import Depends, FastAPI, HTTPException, status, UploadFile, File, Response, Path
+from fastapi import Depends, FastAPI, HTTPException, status, UploadFile, File, Response, Path, Body
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from typing import List
 from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from datetime import datetime
 
 # --- Imports de nuestra aplicación ---
 from . import auth, crud, models, schemas
@@ -22,6 +24,9 @@ app = FastAPI(
     description="API para la plataforma multi-tenant de Bytchat.",
     version="1.4.0"
 )
+
+# Montar la carpeta de archivos estáticos
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # --- CONFIGURACIÓN DE CORS ---
 app.add_middleware(
@@ -238,3 +243,33 @@ def delete_bot_document(
     db.delete(doc)
     db.commit()
     return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+@app.post("/chat-public/{bot_id}", tags=["Chat"])
+def handle_public_chat(
+    bot_id: int,
+    data: dict = Body(...),
+    db: Session = Depends(get_db)
+):
+    """
+    Endpoint público para el widget de chat. Recibe userAnonId y mensaje.
+    Guarda la métrica y responde usando el bot.
+    """
+    user_anon_id = data.get('userAnonId')
+    query = data.get('query')
+    if not user_anon_id or not query:
+        raise HTTPException(status_code=400, detail="Faltan datos obligatorios")
+    # Guardar la métrica básica (puedes expandir esto según tus necesidades)
+    with open('chat_metrics.log', 'a') as f:
+        f.write(f"{datetime.utcnow().isoformat()} | bot_id={bot_id} | userAnonId={user_anon_id} | mensaje={query}\n")
+    # Obtener el bot (sin autenticación)
+    bot = db.query(models.Bot).filter(models.Bot.id == bot_id).first()
+    if not bot:
+        raise HTTPException(status_code=404, detail="Bot no encontrado")
+    bot_config_dict = schemas.Bot.from_orm(bot).model_dump()
+    orchestrator = Orchestrator(db=db, bot_config=bot_config_dict, bot_id=bot_id)
+    # Procesar la consulta
+    text_stream_generator = orchestrator.handle_query(
+        user_id=str(user_anon_id),
+        query=query
+    )
+    return StreamingResponse(text_stream_generator, media_type="text/plain; charset=utf-8")

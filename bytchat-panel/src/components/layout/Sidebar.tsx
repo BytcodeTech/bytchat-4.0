@@ -1,5 +1,5 @@
 import { useNavigate, useLocation } from 'react-router-dom'; // <-- 1. Importamos useLocation
-import { BotMessageSquare, BrainCircuit, BarChart3, CreditCard, LogOut, Settings } from 'lucide-react';
+import { BotMessageSquare, BrainCircuit, BarChart3, CreditCard, LogOut, Settings, CodeXml } from 'lucide-react';
 import NavButton from '@/components/ui/NavButton';
 import { useAuthStore } from '@/store/authStore'; // <-- 2. Importamos el store
 
@@ -38,6 +38,12 @@ const Sidebar = () => {
           label="Entrenamiento"
           isActive={pathname.startsWith('/training')}
           onClick={() => navigate('/training')}
+        />
+        <NavButton
+          icon={CodeXml}
+          label="Incrustar Chat"
+          isActive={pathname.startsWith('/embed-chat')}
+          onClick={() => navigate('/embed-chat')}
         />
         <NavButton icon={BarChart3} label="Analíticas" />
         <NavButton icon={CreditCard} label="Facturación" />

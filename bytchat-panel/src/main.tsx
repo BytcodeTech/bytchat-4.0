@@ -9,6 +9,7 @@ import DashboardPage from './pages/DashboardPage.tsx';
 import RegisterPage from './pages/RegisterPage.tsx';
 import BotsPage from './pages/BotsPage.tsx'; // <-- 1. IMPORTAR LA NUEVA PÁGINA
 import TrainingPage from './pages/TrainingPage'; // <-- Importar la nueva página
+import EmbedChatPage from './pages/EmbedChatPage'; // Importar la nueva página
 
 const router = createBrowserRouter([
   {
@@ -26,6 +27,10 @@ const router = createBrowserRouter([
       {
         path: 'training', // <-- Añadir la ruta de entrenamiento
         element: <TrainingPage />, 
+      },
+      {
+        path: 'embed-chat',
+        element: <EmbedChatPage />,
       },
       {
         index: true, // <-- 4. REDIRIGIMOS LA RUTA RAÍZ A /bots
