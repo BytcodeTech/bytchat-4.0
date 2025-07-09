@@ -1,7 +1,7 @@
 // bytchat-panel/src/components/cards/BotCard.tsx
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { BrainCircuit, Settings, Trash2, Pencil } from 'lucide-react';
+import { BrainCircuit, Settings, Trash2, Pencil, ExternalLink } from 'lucide-react';
 import { Bot } from '@/types';
 
 interface BotCardProps {
@@ -12,6 +12,10 @@ interface BotCardProps {
 }
 
 const BotCard = ({ bot, onManageClick, onDeleteClick, onEditClick }: BotCardProps) => {
+  const handleDemoClick = () => {
+    window.open('http://161.132.45.210:5174', '_blank');
+  };
+
   return (
     <Card className="flex flex-col">
       <CardHeader>

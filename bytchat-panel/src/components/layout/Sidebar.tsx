@@ -1,9 +1,15 @@
+import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom'; // <-- 1. Importamos useLocation
 import { BotMessageSquare, BrainCircuit, BarChart3, CreditCard, LogOut, Settings, CodeXml } from 'lucide-react';
 import NavButton from '@/components/ui/NavButton';
 import { useAuthStore } from '@/store/authStore'; // <-- 2. Importamos el store
 
-const Sidebar = () => {
+interface SidebarProps {
+  className?: string;
+  onClose?: () => void;
+}
+
+const Sidebar: React.FC<SidebarProps> = ({ className = '', onClose }) => {
   // --- 3. Preparamos la lógica de logout ---
   const { logout } = useAuthStore();
   const navigate = useNavigate();
@@ -16,7 +22,16 @@ const Sidebar = () => {
   // ------------------------------------
 
   return (
-    <aside className="hidden md:flex flex-col w-64 bg-slate-800 text-white">
+    <aside className={`flex flex-col w-64 bg-slate-800 text-white relative ${className}`}>
+      {/* Botón cerrar solo en móvil */}
+      {onClose && (
+        <button
+          className="absolute top-4 right-4 md:hidden text-white text-2xl"
+          onClick={onClose}
+        >
+          ×
+        </button>
+      )}
       {/* --- Logo Header --- */}
       <div className="p-6 flex items-center space-x-3 border-b border-slate-700">
         <div className="w-10 h-10 bg-sky-600 rounded-lg flex items-center justify-center font-bold text-xl">

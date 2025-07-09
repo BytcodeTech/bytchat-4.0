@@ -1,12 +1,17 @@
 import { Menu, Search, Bell, CircleUser } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import React from 'react';
 
-const Header = () => {
+interface HeaderProps {
+  onMenuClick?: () => void;
+}
+
+const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
   return (
     <header className="flex items-center h-16 px-6 border-b bg-white">
       {/* Botón para menú en móvil */}
-      <Button variant="ghost" size="icon" className="md:hidden">
+      <Button variant="ghost" size="icon" className="md:hidden" onClick={onMenuClick}>
         <Menu className="h-6 w-6" />
         <span className="sr-only">Abrir menú</span>
       </Button>
