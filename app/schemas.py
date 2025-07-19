@@ -1,7 +1,7 @@
 from pydantic import BaseModel, Field
 from typing import List, Optional
 from datetime import datetime
-from .models import DocumentStatus # Importar el Enum
+from .models import DocumentStatus, UserRole # Importar el Enum
 
 
 # --- Schemas de BotModelConfig ---
@@ -75,12 +75,30 @@ class UserBase(BaseModel):
 class UserCreate(UserBase):
     password: str
 
+class UserUpdate(BaseModel):
+    is_active: Optional[bool] = None
+    is_approved: Optional[bool] = None
+    role: Optional[UserRole] = None
+
+class PasswordUpdate(BaseModel):
+    current_password: str
+    new_password: str
+
 class User(UserBase):
     id: int
     is_active: bool
+    is_approved: bool
+    role: UserRole
+    created_at: datetime
+    approved_at: Optional[datetime] = None
+    approved_by: Optional[str] = None
     bots: List[Bot] = []
     class Config:
         from_attributes = True
+
+class UserAdmin(User):
+    """Schema para administradores que pueden ver todos los campos"""
+    pass
 
 # --- Schemas de Token y Chat ---
 class Token(BaseModel):
@@ -92,3 +110,4 @@ class TokenData(BaseModel):
 
 class ChatQuery(BaseModel):
     query: str
+

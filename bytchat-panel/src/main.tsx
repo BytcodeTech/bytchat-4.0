@@ -10,6 +10,8 @@ import RegisterPage from './pages/RegisterPage.tsx';
 import BotsPage from './pages/BotsPage.tsx'; // <-- 1. IMPORTAR LA NUEVA PÁGINA
 import TrainingPage from './pages/TrainingPage'; // <-- Importar la nueva página
 import EmbedChatPage from './pages/EmbedChatPage'; // Importar la nueva página
+import AdminPage from './pages/AdminPage';
+import AdminRoute from './components/auth/AdminRoute';
 
 const router = createBrowserRouter([
   {
@@ -31,6 +33,14 @@ const router = createBrowserRouter([
       {
         path: 'embed-chat',
         element: <EmbedChatPage />,
+      },
+      {
+        path: 'admin',
+        element: (
+          <AdminRoute>
+            <AdminPage />
+          </AdminRoute>
+        ),
       },
       {
         index: true, // <-- 4. REDIRIGIMOS LA RUTA RAÍZ A /bots

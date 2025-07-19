@@ -1,6 +1,6 @@
 import os
 import shutil
-from fastapi import Depends, FastAPI, HTTPException, status, UploadFile, File, Response, Path, Body
+from fastapi import Depends, FastAPI, HTTPException, status, UploadFile, File, Response, Path, Body, Request
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from typing import List
@@ -60,6 +60,74 @@ def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
 @app.get("/users/me/", response_model=schemas.User, tags=["Users"])
 def read_users_me(current_user: models.User = Depends(auth.get_current_user)):
     return current_user
+
+@app.put("/users/me/password/", response_model=schemas.User, tags=["Users"])
+def change_user_password(
+    password_update: schemas.PasswordUpdate,
+    current_user: models.User = Depends(auth.get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Cambia la contraseña del usuario actual"""
+    return crud.change_user_password(db=db, user_id=current_user.id, password_update=password_update)
+
+# === Endpoints de Administración de Usuarios ===
+@app.get("/admin/users/", response_model=List[schemas.UserAdmin], tags=["Admin"])
+def get_all_users_admin(db: Session = Depends(get_db), current_user: models.User = Depends(auth.require_admin_role)):
+    """Obtiene todos los usuarios (solo para administradores)"""
+    return crud.get_all_users(db)
+
+@app.get("/admin/users/pending/", response_model=List[schemas.UserAdmin], tags=["Admin"])
+def get_pending_users_admin(db: Session = Depends(get_db), current_user: models.User = Depends(auth.require_admin_role)):
+    """Obtiene usuarios pendientes de aprobación"""
+    return crud.get_pending_users(db)
+
+@app.post("/admin/users/{user_id}/approve/", response_model=schemas.UserAdmin, tags=["Admin"])
+def approve_user_admin(
+    user_id: int, 
+    db: Session = Depends(get_db), 
+    current_user: models.User = Depends(auth.require_admin_role)
+):
+    """Aprueba un usuario manualmente"""
+    return crud.approve_user(db, user_id=user_id, approved_by=current_user.email)
+
+@app.post("/admin/users/{user_id}/reject/", response_model=schemas.UserAdmin, tags=["Admin"])
+def reject_user_admin(
+    user_id: int, 
+    db: Session = Depends(get_db), 
+    current_user: models.User = Depends(auth.require_admin_role)
+):
+    """Rechaza un usuario"""
+    return crud.reject_user(db, user_id=user_id)
+
+@app.put("/admin/users/{user_id}/status/", response_model=schemas.UserAdmin, tags=["Admin"])
+def update_user_status_admin(
+    user_id: int,
+    user_update: schemas.UserUpdate,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(auth.require_admin_role)
+):
+    """Actualiza el estado de un usuario"""
+    return crud.update_user_status(db, user_id=user_id, user_update=user_update)
+
+# === Endpoints de Super Administración ===
+@app.post("/admin/users/{user_id}/role/", response_model=schemas.UserAdmin, tags=["Super Admin"])
+def update_user_role_admin(
+    user_id: int,
+    role_update: schemas.UserUpdate,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(auth.require_super_admin_role)
+):
+    """Actualiza el rol de un usuario (solo super administradores)"""
+    return crud.update_user_role(db, user_id=user_id, role_update=role_update)
+
+@app.post("/admin/users/{user_id}/toggle-approval/", response_model=schemas.UserAdmin, tags=["Super Admin"])
+def toggle_user_approval_admin(
+    user_id: int,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(auth.require_super_admin_role)
+):
+    """Cambia el estado de aprobación de un usuario (solo super administradores)"""
+    return crud.toggle_user_approval(db, user_id=user_id, toggled_by=current_user.email)
 
 
 # --- Función auxiliar para obtener un bot de un usuario específico ---
@@ -237,7 +305,11 @@ def delete_bot_document(
         raise HTTPException(status_code=404, detail="Documento no encontrado para este bot")
     # Eliminar archivo físico e índice si existen
     if doc.vector_index_path and os.path.exists(doc.vector_index_path):
-        os.remove(doc.vector_index_path)
+        if os.path.isdir(doc.vector_index_path):
+            shutil.rmtree(doc.vector_index_path)
+        else:
+            os.remove(doc.vector_index_path)
+    # Si en el futuro se agrega file_path al modelo Document, este bloque lo manejará
     if hasattr(doc, 'file_path') and doc.file_path and os.path.exists(doc.file_path):
         os.remove(doc.file_path)
     db.delete(doc)
@@ -273,3 +345,4 @@ def handle_public_chat(
         query=query
     )
     return StreamingResponse(text_stream_generator, media_type="text/plain; charset=utf-8")
+

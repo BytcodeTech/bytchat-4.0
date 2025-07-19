@@ -37,7 +37,8 @@ class RAGRetriever:
 
         if not completed_docs:
             logging.warning(f"No se encontraron documentos procesados para el bot {bot_id}.")
-            return ["No se encontró información en los documentos para responder a tu pregunta."]
+            # Devolver lista vacía para permitir que el modelo use su conocimiento base
+            return []
 
         all_chunks = []
         logging.info(f"Buscando en {len(completed_docs)} documento(s) para el bot {bot_id}.")
@@ -63,13 +64,15 @@ class RAGRetriever:
                 logging.warning(f"La ruta del índice no existe: {index_path}")
         
         if not all_chunks:
-            return ["No se pudo encontrar información relevante en los documentos."]
+            logging.info(f"No se encontraron chunks relevantes para la consulta: {query}")
+            # Devolver lista vacía para permitir que el modelo use su conocimiento base
+            return []
 
         # 3. Ordenar todos los chunks por relevancia (menor puntuación es mejor)
         all_chunks.sort(key=lambda x: x[1])
         
         # Devolver el contenido de los 'k' mejores chunks
         top_k_chunks = [chunk[0].page_content for chunk in all_chunks[:k]]
-        logging.info(f"Chunks más relevantes encontrados: {top_k_chunks}")
+        logging.info(f"Chunks más relevantes encontrados: {len(top_k_chunks)} chunks")
         
         return top_k_chunks

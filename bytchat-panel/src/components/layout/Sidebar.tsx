@@ -1,8 +1,10 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom'; // <-- 1. Importamos useLocation
-import { BotMessageSquare, BrainCircuit, BarChart3, CreditCard, LogOut, Settings, CodeXml } from 'lucide-react';
+import { BotMessageSquare, BrainCircuit, BarChart3, CreditCard, LogOut, Settings, CodeXml, Shield } from 'lucide-react';
 import NavButton from '@/components/ui/NavButton';
 import { useAuthStore } from '@/store/authStore'; // <-- 2. Importamos el store
+import { Icons } from '@/components/ui/icons';
+import LogoBytcodeAnimated from '@/components/ui/LogoBytcodeAnimated';
 
 interface SidebarProps {
   className?: string;
@@ -11,7 +13,7 @@ interface SidebarProps {
 
 const Sidebar: React.FC<SidebarProps> = ({ className = '', onClose }) => {
   // --- 3. Preparamos la lógica de logout ---
-  const { logout } = useAuthStore();
+  const { logout, isAdmin } = useAuthStore();
   const navigate = useNavigate();
   const { pathname } = useLocation();
 
@@ -33,11 +35,8 @@ const Sidebar: React.FC<SidebarProps> = ({ className = '', onClose }) => {
         </button>
       )}
       {/* --- Logo Header --- */}
-      <div className="p-6 flex items-center space-x-3 border-b border-slate-700">
-        <div className="w-10 h-10 bg-sky-600 rounded-lg flex items-center justify-center font-bold text-xl">
-          B
-        </div>
-        <h1 className="text-xl font-bold">Bytchat Panel</h1>
+      <div className="p-6 flex flex-col items-center space-y-2 border-b border-slate-700">
+        <LogoBytcodeAnimated onlyA className="w-[85px] h-[85px]" />
       </div>
 
       {/* --- Main Navigation --- */}
@@ -62,6 +61,16 @@ const Sidebar: React.FC<SidebarProps> = ({ className = '', onClose }) => {
         />
         <NavButton icon={BarChart3} label="Analíticas" />
         <NavButton icon={CreditCard} label="Facturación" />
+        
+        {/* Panel de Administración - Solo para administradores */}
+        {isAdmin() && (
+          <NavButton
+            icon={Shield}
+            label="Panel de Administración"
+            isActive={pathname.startsWith('/admin')}
+            onClick={() => navigate('/admin')}
+          />
+        )}
       </nav>
 
       {/* --- Footer Navigation --- */}

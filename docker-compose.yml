@@ -24,9 +24,14 @@ services:
     image: nginx:alpine
     container_name: bychat_nginx
     ports:
-       - "161.132.45.210:80:80"
+      - "161.132.45.210:80:80"
+      - "161.132.45.210:443:443"
+      - "161.132.45.210:5174:80"  # Puerto adicional para compatibilidad
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf
+      - ./certs/bytchat-selfsigned.key:/etc/ssl/private/bytchat-selfsigned.key:ro
+      - ./certs/bytchat-selfsigned.crt:/etc/ssl/certs/bytchat-selfsigned.crt:ro
+      - ./static:/app/static
     depends_on:
       - web
     restart: unless-stopped

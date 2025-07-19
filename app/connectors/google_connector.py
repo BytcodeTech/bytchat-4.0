@@ -13,7 +13,7 @@ class GoogleConnector:
         genai.configure(api_key=api_key)
         print("Conector de Google inicializado correctamente.")
 
-    def get_response_stream(self, prompt_package, model_id='gemini-1.5-pro-latest'):
+    def get_response_stream(self, prompt_package, model_id='gemini-1.5-pro-latest', temperature=None):
         """
         Obtiene una respuesta en streaming del modelo de Google.
         """

@@ -3,12 +3,22 @@ from sqlalchemy.orm import relationship
 from .database import Base
 import enum
 
+class UserRole(str, enum.Enum):
+    USER = "user"
+    ADMIN = "admin"
+    SUPER_ADMIN = "super_admin"
+
 class User(Base):
     __tablename__ = "users"
     id = Column(Integer, primary_key=True, index=True)
     email = Column(String, unique=True, index=True, nullable=False)
     hashed_password = Column(String, nullable=False)
-    is_active = Column(Boolean, default=True)
+    is_active = Column(Boolean, default=False)  # Cambiado a False por defecto
+    is_approved = Column(Boolean, default=False)  # Nuevo campo para autorización manual
+    role = Column(Enum(UserRole), default=UserRole.USER, nullable=False)  # Nuevo campo de rol
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    approved_at = Column(DateTime(timezone=True), nullable=True)
+    approved_by = Column(String, nullable=True)  # Email del admin que aprobó
 
     # La relación se mantiene igual aquí
     bots = relationship("Bot", back_populates="owner", cascade="all, delete-orphan")

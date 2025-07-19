@@ -26,8 +26,25 @@ class Orchestrator:
         logging.info(f"\n--- Petición para el Bot ID: {self.bot_id} ---")
 
         relevant_chunks = self.retriever.search(db=self.db, bot_id=self.bot_id, query=query)
-        context = "\n".join(relevant_chunks)
-        logging.info(f"Contexto recuperado para la pregunta: {context}")
+        
+        # Construir el prompt según si hay contexto o no
+        if relevant_chunks:
+            context = "\n".join(relevant_chunks)
+            logging.info(f"Contexto recuperado para la pregunta: {len(relevant_chunks)} chunks")
+            prompt_package = {
+                "system_prompt": self.bot_config.get("system_prompt", "Eres un asistente de IA."),
+                "user_question": f"Usando el siguiente contexto, responde la pregunta.\n\nCONTEXTO:\n{context}\n\nPREGUNTA:\n{query}"
+            }
+        else:
+            logging.info("No se encontró contexto relevante, el modelo usará su conocimiento base")
+            prompt_package = {
+                "system_prompt": self.bot_config.get("system_prompt", "Eres un asistente de IA. Si no hay contexto relevante, responde usando tu conocimiento general."),
+                "user_question": (
+                    "No se encontró información relevante en los documentos proporcionados. "
+                    "Responde la siguiente pregunta usando únicamente tu conocimiento general, sin limitarte a los documentos:\n\n"
+                    f"{query}"
+                )
+            }
 
         available_models = self.bot_config.get("model_configs", [])
         chosen_model_config = self.router.select_model(query, available_models)
@@ -45,11 +62,6 @@ class Orchestrator:
             return
         
         logging.info(f"Modelo seleccionado: {model_id_name} via {provider_name}")
-        
-        prompt_package = {
-            "system_prompt": self.bot_config.get("system_prompt", "Eres un asistente de IA."),
-            "user_question": f"Usando el siguiente contexto, responde la pregunta.\n\nCONTEXTO:\n{context}\n\nPREGUNTA:\n{query}"
-        }
 
         stream = connector.get_response_stream(
             prompt_package=prompt_package, 

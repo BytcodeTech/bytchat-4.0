@@ -1,13 +1,15 @@
-import { Menu, Search, Bell, CircleUser } from 'lucide-react';
+import { Menu, Search, Bell, CircleUser, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import React from 'react';
+import React, { useState } from 'react';
+import ChangePasswordModal from '@/components/auth/ChangePasswordModal';
 
 interface HeaderProps {
   onMenuClick?: () => void;
 }
 
 const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
+  const [showChangePassword, setShowChangePassword] = useState(false);
   return (
     <header className="flex items-center h-16 px-6 border-b bg-white">
       {/* Botón para menú en móvil */}
@@ -31,11 +33,29 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
           <Bell className="h-5 w-5" />
           <span className="sr-only">Notificaciones</span>
         </Button>
+        
+        {/* Botón de configuración */}
+        <Button 
+          variant="ghost" 
+          size="icon"
+          onClick={() => setShowChangePassword(true)}
+          title="Cambiar contraseña"
+        >
+          <Settings className="h-5 w-5" />
+          <span className="sr-only">Configuración</span>
+        </Button>
+        
         {/* User Avatar - Vuelve a ser solo un placeholder visual */}
         <div className="h-9 w-9 rounded-full bg-slate-200 flex items-center justify-center">
            <CircleUser className="h-6 w-6 text-slate-600" />
         </div>
       </div>
+      
+      {/* Modal de cambio de contraseña */}
+      <ChangePasswordModal 
+        isOpen={showChangePassword} 
+        onClose={() => setShowChangePassword(false)} 
+      />
     </header>
   );
 };

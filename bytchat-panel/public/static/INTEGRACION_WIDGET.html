@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Integración del Widget Bytchat</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Fira+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Inter', Arial, sans-serif;
+      background: #f8fafc;
+      color: #1e293b;
+      margin: 0;
+      padding: 0 0 48px 0;
+    }
+    .container {
+      max-width: 800px;
+      margin: 32px auto;
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.07);
+      padding: 40px 32px;
+      position: relative;
+      z-index: 2;
+    }
+    h1, h2, h3 {
+      color: #14305a;
+      text-shadow: 0 2px 8px rgba(20,48,90,0.08);
+    }
+    h1 {
+      font-size: 2.2rem;
+      margin-bottom: 0.5em;
+      text-align: center;
+    }
+    h2 {
+      font-size: 1.4rem;
+      margin-top: 2em;
+      margin-bottom: 0.7em;
+    }
+    h3 {
+      font-size: 1.1rem;
+      margin-top: 1.5em;
+      margin-bottom: 0.5em;
+    }
+    ul, ol {
+      margin-left: 1.5em;
+      margin-bottom: 1em;
+    }
+    code, pre {
+      font-family: 'Fira Mono', 'Consolas', 'Menlo', monospace;
+      font-size: 0.98em;
+      background: #f1f5f9;
+      color: #14305a;
+      border-radius: 6px;
+    }
+    pre {
+      padding: 16px;
+      overflow-x: auto;
+      margin: 18px 0;
+      border-left: 4px solid #2563eb;
+      background: #f1f5f9;
+    }
+    .note {
+      background: #e0f2fe;
+      color: #0369a1;
+      border-left: 4px solid #2563eb;
+      padding: 12px 18px;
+      border-radius: 8px;
+      margin: 18px 0;
+      font-size: 0.98em;
+    }
+    .step {
+      background: #f8fafc;
+      border-left: 4px solid #14305a;
+      padding: 10px 18px;
+      border-radius: 8px;
+      margin: 18px 0;
+    }
+    .warning {
+      background: #fef3c7;
+      color: #92400e;
+      border-left: 4px solid #f59e0b;
+      padding: 12px 18px;
+      border-radius: 8px;
+      margin: 18px 0;
+      font-size: 0.98em;
+    }
+    .success {
+      background: #d1fae5;
+      color: #065f46;
+      border-left: 4px solid #10b981;
+      padding: 12px 18px;
+      border-radius: 8px;
+      margin: 18px 0;
+      font-size: 0.98em;
+    }
+    .tabs {
+      display: flex;
+      border-bottom: 2px solid #e2e8f0;
+      margin-bottom: 24px;
+    }
+    .tab {
+      padding: 12px 24px;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+    .tab.active {
+      border-bottom-color: #2563eb;
+      color: #2563eb;
+    }
+    .tab:hover {
+      background: #f1f5f9;
+    }
+    .tab-content {
+      display: none;
+    }
+    .tab-content.active {
+      display: block;
+    }
+    @media (max-width: 600px) {
+      .container { padding: 18px 4vw; }
+      h1 { font-size: 1.3rem; }
+      h2 { font-size: 1.1rem; }
+      .tabs { flex-direction: column; }
+      .tab { text-align: center; }
+    }
+    .header-bg {
+      width: 100%;
+      min-height: 200px;
+      background: linear-gradient(120deg, #14305a 0%, #2563eb 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-bottom-left-radius: 48px;
+      border-bottom-right-radius: 48px;
+      box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.13);
+      margin-bottom: -60px;
+      position: relative;
+      z-index: 1;
+      padding-top: 40px;
+      padding-bottom: 24px;
+    }
+    .logo-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      margin-top: 0;
+      margin-bottom: 16px;
+    }
+    .logo-svg-shadow {
+      filter: drop-shadow(0 2px 12px rgba(59,130,246,0.15));
+      transition: filter 0.3s cubic-bezier(0.77,0,0.18,1), transform 0.3s cubic-bezier(0.77,0,0.18,1);
+    }
+    .logo-svg-hover:hover {
+      filter: drop-shadow(0 0 24px #3B82F6) drop-shadow(0 2px 12px rgba(59,130,246,0.15));
+      transform: scale(1.06) translateY(-2px);
+    }
+    .logo-a-stroke {
+      stroke-dasharray: 260;
+      stroke-dashoffset: 260;
+      animation: draw-a 1.2s cubic-bezier(0.77,0,0.18,1) forwards;
+    }
+    @keyframes draw-a {
+      to { stroke-dashoffset: 0; }
+    }
+    .logo-arrow {
+      opacity: 0;
+      transform: scale(0.8);
+      animation: arrow-fade-in 0.5s 1.1s cubic-bezier(0.77,0,0.18,1) forwards, arrow-pulse 2.5s 1.7s infinite cubic-bezier(0.77,0,0.18,1);
+    }
+    @keyframes arrow-fade-in {
+      to { opacity: 1; transform: scale(1); }
+    }
+    @keyframes arrow-pulse {
+      0%, 100% { filter: drop-shadow(0 0 0px #3B82F6); }
+      50% { filter: drop-shadow(0 0 16px #60a5fa); }
+    }
+    .logo-texts {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-top: 8px;
+    }
+    .logo-text-main {
+      color: #fff;
+      font-size: 2.1rem;
+      font-weight: bold;
+      letter-spacing: 0.18em;
+      text-shadow: 0 2px 8px rgba(20,48,90,0.18);
+      opacity: 0;
+      transform: translateY(16px);
+      animation: text-fade-in 0.7s 1.5s cubic-bezier(0.77,0,0.18,1) forwards;
+    }
+    .logo-text-sub {
+      color: #3B82F6;
+      font-size: 1.1rem;
+      font-weight: 600;
+      letter-spacing: 0.28em;
+      text-shadow: 0 2px 8px rgba(59,130,246,0.12);
+      opacity: 0;
+      transform: translateY(16px);
+      animation: text-fade-in 0.7s 1.8s cubic-bezier(0.77,0,0.18,1) forwards;
+    }
+    @keyframes text-fade-in {
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @media (max-width: 600px) {
+      .header-bg {
+        min-height: 120px;
+        padding-top: 24px;
+        padding-bottom: 12px;
+      }
+      .logo-container svg {
+        width: 60px;
+        height: 60px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="header-bg">
+    <div class="logo-container">
+      <!-- Logo animado Bytcode -->
+      <svg viewBox="0 0 100 100" width="90" height="90" class="logo-svg-shadow logo-svg-hover" aria-label="Logo Bytcode Assist">
+        <path d="M 15 90 L 50 10 L 85 90" stroke="#fff" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" fill="none" class="logo-a-stroke"/>
+        <path class="logo-arrow" d="M 30 60 L 75 45 L 65 30" fill="#3B82F6"/>
+      </svg>
+      <div class="logo-texts">
+        <span class="logo-text-main">BYTCODE</span>
+        <span class="logo-text-sub">ASSIST</span>
+      </div>
+    </div>
+  </div>
+  <div class="container">
+    <h1>Integración del Widget Bytchat</h1>
+    
+    <div class="tabs">
+      <div class="tab active" onclick="showTab('easy')">🚀 Integración Fácil</div>
+      <div class="tab" onclick="showTab('advanced')">⚙️ Integración Avanzada</div>
+    </div>
+
+    <!-- Integración Fácil -->
+    <div id="easy" class="tab-content active">
+      <div class="success">
+        <strong>¡Recomendado!</strong> La forma más sencilla de integrar el chat profesional de Bytchat en tu web.
+      </div>
+
+      <h2>1. Copia y pega el código</h2>
+      <p>Añade este código justo antes de la etiqueta <code>&lt;/body&gt;</code> de tu página:</p>
+      
+      <pre><code>&lt;script&gt;
+  window.bytchatConfig = {
+    botId: "AQUÍ_SU_ID", // Obligatorio
+    color: "#14305a",    // Opcional
+    logo: "URL_DEL_LOGO",// Opcional
+    nombre: "ChatBot",   // Opcional
+    mensaje: "¡Hola! ¿En qué puedo ayudarte?" // Opcional
+  };
+&lt;/script&gt;
+&lt;script src="https://bytcode.tech/static/bytchat-integration.js"&gt;&lt;/script&gt;</code></pre>
+
+      <h2>2. Personaliza los parámetros</h2>
+      <div class="step">
+        <strong>Parámetros disponibles:</strong>
+        <ul>
+          <li><code>botId</code>: ID de tu bot (obligatorio)</li>
+          <li><code>color</code>: Color principal del chat (hex)</li>
+          <li><code>logo</code>: URL de la imagen del bot</li>
+          <li><code>nombre</code>: Nombre que aparecerá en el chat</li>
+          <li><code>mensaje</code>: Mensaje de bienvenida</li>
+        </ul>
+      </div>
+
+      <h2>3. ¡Listo!</h2>
+      <div class="success">
+        <strong>El chat aparecerá automáticamente</strong> como una burbuja flotante profesional en la esquina inferior derecha de tu web.
+      </div>
+
+      <div class="note">
+        <strong>💡 Ventajas de la integración fácil:</strong>
+        <ul>
+          <li>No necesitas HTML extra</li>
+          <li>El script crea todo automáticamente</li>
+          <li>Burbuja profesional con animaciones</li>
+          <li>Se adapta a cualquier dispositivo</li>
+          <li>Personalización completa desde el código</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Integración Avanzada -->
+    <div id="advanced" class="tab-content">
+      <div class="warning">
+        <strong>Para desarrolladores avanzados</strong> que necesitan control total sobre el widget.
+      </div>
+
+      <h2>1. Genera el código desde el panel</h2>
+      <div class="step">
+        Desde el panel de control de Bytchat, accede a la sección <strong>"Incrustar Chat en tu Web"</strong> de tu bot. Personaliza los colores, mensaje de bienvenida, logo y nombre del bot.
+      </div>
+
+      <h2>2. Código del contenedor</h2>
+      <p>El código generado tendrá esta estructura:</p>
+      <pre><code>&lt;div id="bytchat-box" style="position: fixed; bottom: 20px; right: 20px; width: 350px; height: 500px; z-index: 1000;"&gt;
+  &lt;iframe 
+    src="https://bytcode.tech/static/chat-widget.html?id=TU_BOT_ID&amp;color=%2314305a&amp;bg=%23f5f5f5&amp;mensaje=%C2%A1Hola!%20%C2%BFEn%20qu%C3%A9%20puedo%20ayudarte%3F&amp;logo=URL_DEL_LOGO&amp;nombre=ChatBot" 
+    style="width: 100%; height: 100%; border: none; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.1);"
+    title="Chat Widget"
+    allow="microphone"
+  &gt;&lt;/iframe&gt;
+&lt;/div&gt;</code></pre>
+
+      <h2>3. Script de comunicación postMessage</h2>
+      <p>Añade este script para controlar el estado del widget:</p>
+      <pre><code>&lt;script&gt;
+window.addEventListener('message', function(event) {
+  if (event.data &amp;&amp; event.data.type === 'bytchat-state') {
+    const box = document.getElementById('bytchat-box');
+    if (box) {
+      box.style.width = event.data.width + 'px';
+      box.style.height = event.data.height + 'px';
+      box.style.display = (event.data.state === 'open' || event.data.state === 'close') ? 'block' : 'none';
+    }
+  }
+});
+&lt;/script&gt;</code></pre>
+
+      <h2>4. Datos enviados por postMessage</h2>
+      <div class="step">
+        El widget envía información detallada sobre su estado y posición:
+      </div>
+      <pre><code>{
+  type: 'bytchat-state',
+  state: 'open' | 'close' | 'minimized',
+  width: 350,
+  height: 500,
+  top: 100,
+  left: 1200,
+  right: 1550,
+  bottom: 600,
+  centerX: 1450,
+  centerY: 350,
+  position: {
+    top: "auto",
+    left: "auto",
+    right: "32px",
+    bottom: "32px",
+    position: "fixed",
+    zIndex: "9999"
+  }
+}</code></pre>
+
+      <h2>5. Casos de uso avanzados</h2>
+      <ul>
+        <li><strong>Múltiples bots</strong>: Usa IDs diferentes para cada contenedor</li>
+        <li><strong>Posicionamiento personalizado</strong>: Ajusta la posición según tus necesidades</li>
+        <li><strong>Control de estado</strong>: Reacciona a cambios de estado del chat</li>
+        <li><strong>Evitar solapamientos</strong>: Usa las coordenadas para posicionar otros elementos</li>
+      </ul>
+    </div>
+
+    <h2>📋 Pasos para comenzar</h2>
+    <ol>
+      <li><strong>Crea tu bot</strong> desde el panel de control de Bytchat</li>
+      <li><strong>Personaliza</strong> colores, logo, nombre y mensaje</li>
+      <li><strong>Genera el código</strong> desde la sección "Incrustar Chat en tu Web"</li>
+      <li><strong>Copia y pega</strong> el código en tu página web</li>
+      <li><strong>¡Listo!</strong> Tu chat estará funcionando</li>
+    </ol>
+
+    <div class="note">
+      <strong>🔧 ¿Necesitas ayuda?</strong><br>
+      Si tienes dudas o necesitas soporte técnico, contacta a nuestro equipo.<br>
+      <strong>Bytchat - Plataforma de Asistentes de IA v4.0</strong>
+    </div>
+  </div>
+
+  <script>
+    function showTab(tabName) {
+      // Ocultar todas las pestañas
+      const tabs = document.querySelectorAll('.tab-content');
+      tabs.forEach(tab => tab.classList.remove('active'));
+      
+      // Desactivar todas las pestañas
+      const tabButtons = document.querySelectorAll('.tab');
+      tabButtons.forEach(button => button.classList.remove('active'));
+      
+      // Mostrar la pestaña seleccionada
+      document.getElementById(tabName).classList.add('active');
+      
+      // Activar el botón de la pestaña
+      event.target.classList.add('active');
+    }
+  </script>
+</body>
+</html> 

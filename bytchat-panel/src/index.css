@@ -1,6 +1,42 @@
+html, body {
+  width: 100%;
+  min-height: 100vh;
+}
+#bytchat-main-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 16px;
+}
+html {
+  font-size: 16px;
+  box-sizing: border-box;
+}
+body {
+  font-family: 'Inter', Arial, sans-serif;
+  font-size: 1rem;
+  background: #f8fafc;
+  color: #222;
+  margin: 0;
+  padding: 0;
+}
 @tailwind base; @tailwind components; @tailwind utilities;
 
 /* Forzar z-index alto para el portal de Radix UI (shadcn/ui) */
 [data-radix-popper-content-wrapper] {
   z-index: 9999 !important;
+}
+
+@keyframes fade-in-up {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in-up {
+  animation: fade-in-up 0.7s cubic-bezier(0.77,0,0.18,1);
+}
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.animate-fade-in {
+  animation: fade-in 0.4s cubic-bezier(0.77,0,0.18,1);
 }

@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Demo Burbuja Bytchat</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body { background: #f8fafc; color: #1e293b; font-family: 'Inter', Arial, sans-serif; margin: 0; min-height: 100vh; }
+    .container { max-width: 480px; margin: 48px auto; background: #fff; border-radius: 16px; box-shadow: 0 4px 24px rgba(0,0,0,0.07); padding: 32px 24px; text-align: center; }
+    h1 { color: #14305a; font-size: 1.5rem; margin-bottom: 0.5em; }
+    .desc { color: #2563eb; font-size: 1.1rem; margin-bottom: 1.5em; }
+    code { background: #f1f5f9; color: #14305a; border-radius: 6px; padding: 2px 6px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Demo burbuja profesional Bytchat</h1>
+    <div class="desc">Así se verá el chat en tu web con la integración universal.</div>
+    <div style="margin-bottom: 1.5em; color: #64748b; font-size: 0.98em;">Puedes cerrar/minimizar el chat y volver a abrir la burbuja para probar la experiencia real.</div>
+  </div>
+  <script>
+    // Leer parámetros de la URL
+    function getParam(name, def) {
+      const url = new URL(window.location.href);
+      return url.searchParams.get(name) || def;
+    }
+    window.bytchatConfig = {
+      botId: getParam('botId', 'demo'),
+      color: getParam('color', '#14305a'),
+      bg: getParam('bg', '#f5f5f5'),
+      logo: getParam('logo', 'https://cdn-icons-png.flaticon.com/512/4712/4712035.png'),
+      nombre: getParam('nombre', 'ChatBot'),
+      mensaje: getParam('mensaje', '¡Hola! ¿En qué puedo ayudarte?')
+    };
+  </script>
+  <script src="/static/bytchat-integration.js"></script>
+</body>
+</html> 

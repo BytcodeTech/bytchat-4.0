@@ -9,6 +9,7 @@ export type Model = {
   name: string;
   provider: 'google' | 'openai' | 'deepseek' | string;
   task_type: 'simple' | 'complex' | string;
+  comingSoon?: boolean;
 };
 
 type ModelCardProps = {
@@ -79,9 +80,10 @@ const ModelCard = ({ model, onAdd, onRemove, isUpdating = false, actionType }: M
           </p>
         </div>
       </div>
-      
-      <div className="w-20 text-right">
-        {isUpdating ? (
+      <div className="w-28 text-right">
+        {model.comingSoon ? (
+          <span className="inline-block px-2 py-1 text-xs font-bold text-orange-600 bg-orange-100 rounded">Próximamente</span>
+        ) : isUpdating ? (
           <Loader2 className="h-5 w-5 animate-spin text-slate-400 inline-block" />
         ) : (
           <Button variant="link" className={cn("p-0 h-auto font-semibold", actionColorClass)} onClick={actionHandler}>

@@ -12,13 +12,14 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'http://127.0.0.1:8001',
+        target: 'http://161.132.45.210:8001',
         changeOrigin: true,
         // Volvemos a añadir la regla "rewrite"
         rewrite: (path) => path.replace(/^\/api/, ''),
       }
     },
     host: '0.0.0.0',
-    port: 5174,
+    port: 5176,
+    strictPort: true,
   }
 })

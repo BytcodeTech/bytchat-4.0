@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Prueba de Integración Widget Bytchat</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body { font-family: 'Inter', Arial, sans-serif; background: #f8fafc; color: #1e293b; margin: 0; padding: 0; }
+    .container { max-width: 900px; margin: 32px auto; background: #fff; border-radius: 16px; box-shadow: 0 4px 24px rgba(0,0,0,0.07); padding: 40px 32px; }
+    h1 { color: #14305a; text-align: center; }
+    #bytchat-box { position: fixed; z-index: 10000; display: none; }
+    iframe { width: 100%; height: 100%; border: none; border-radius: 16px; }
+    .log-area { background: #f1f5f9; border-radius: 8px; padding: 16px; margin-top: 32px; font-size: 0.98em; max-height: 300px; overflow-y: auto; }
+    .log-entry { margin-bottom: 10px; border-bottom: 1px solid #e0e7ef; padding-bottom: 8px; }
+    .log-entry:last-child { border-bottom: none; }
+    .log-title { color: #2563eb; font-weight: bold; }
+    .log-json { font-family: 'Fira Mono', 'Consolas', monospace; color: #14305a; background: #e0e7ef; border-radius: 4px; padding: 4px 8px; display: block; }
+    .bytchat-bubble {
+      position: fixed;
+      right: 32px;
+      bottom: 32px;
+      z-index: 10001;
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      background: #2196f3;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: box-shadow 0.2s, transform 0.2s;
+      border: 4px solid #fff;
+    }
+    .bytchat-bubble:hover {
+      box-shadow: 0 8px 24px #2196f3;
+      transform: scale(1.08);
+    }
+    .bytchat-bubble-icon {
+      width: 36px;
+      height: 36px;
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Prueba de Integración Widget Bytchat</h1>
+    <div class="log-area" id="log-area">
+      <div class="log-title">Mensajes postMessage recibidos:</div>
+    </div>
+  </div>
+  <div id="bytchat-box"></div>
+  <div id="bytchat-bubble" class="bytchat-bubble">
+    <!-- Icono SVG de burbuja/chatbot -->
+    <svg class="bytchat-bubble-icon" viewBox="0 0 48 48" fill="none"><rect width="48" height="48" rx="24" fill="#2196f3"/><g><rect x="12" y="18" width="24" height="14" rx="7" fill="#fff"/><rect x="18" y="14" width="12" height="8" rx="4" fill="#fff"/><circle cx="18" cy="25" r="2" fill="#222"/><circle cx="30" cy="25" r="2" fill="#222"/><rect x="22" y="28" width="4" height="2" rx="1" fill="#222"/></g></svg>
+  </div>
+  <script>
+    function addLog(data) {
+      const logArea = document.getElementById('log-area');
+      const entry = document.createElement('div');
+      entry.className = 'log-entry';
+      entry.innerHTML = '<span class="log-title">Mensaje:</span> <pre class="log-json">' + JSON.stringify(data, null, 2) + '</pre>';
+      logArea.appendChild(entry);
+      logArea.scrollTop = logArea.scrollHeight;
+    }
+
+    // Estado de la burbuja y el chat
+    let chatOpen = false;
+
+    // Función para crear el iframe del chat SIEMPRE con tamaño por defecto
+    function showChatWidget() {
+      const box = document.getElementById('bytchat-box');
+      // Eliminar cualquier iframe previo
+      box.innerHTML = '';
+      const iframe = document.createElement('iframe');
+      iframe.src = 'https://bytcode.tech/static/chat-widget.html?autoOpen=1';
+      iframe.allow = 'microphone';
+      iframe.style.width = '350px';
+      iframe.style.height = '500px';
+      iframe.style.borderRadius = '16px';
+      box.appendChild(iframe);
+      box.style.width = '350px';
+      box.style.height = '500px';
+      box.style.display = 'block';
+      box.style.position = 'fixed';
+      box.style.right = '32px';
+      box.style.bottom = '32px';
+      box.style.left = 'auto';
+      box.style.top = 'auto';
+      document.getElementById('bytchat-bubble').style.display = 'none';
+      chatOpen = true;
+    }
+
+    // Función para mostrar la burbuja SIEMPRE en la esquina inferior derecha
+    function showBubble() {
+      const bubble = document.getElementById('bytchat-bubble');
+      bubble.style.display = 'flex';
+      bubble.style.right = '32px';
+      bubble.style.bottom = '32px';
+      bubble.style.left = '';
+      bubble.style.top = '';
+      // Eliminar el iframe SIEMPRE al cerrar/minimizar
+      document.getElementById('bytchat-box').innerHTML = '';
+      document.getElementById('bytchat-box').style.display = 'none';
+      chatOpen = false;
+    }
+
+    // Click en la burbuja: abrir el chat SIEMPRE con tamaño por defecto
+    document.getElementById('bytchat-bubble').onclick = function() {
+      showChatWidget();
+    };
+
+    window.addEventListener('message', function(event) {
+      // Solo procesar mensajes del widget Bytchat
+      if (event.data && event.data.type === 'bytchat-state') {
+        addLog(event.data);
+        // Solo ajustar el tamaño si el mensaje recibido es válido (no burbuja)
+        if (event.data.width > 100 && event.data.height > 100) {
+          const box = document.getElementById('bytchat-box');
+          box.style.width = event.data.width + 'px';
+          box.style.height = event.data.height + 'px';
+          box.style.right = '32px';
+          box.style.bottom = '32px';
+          box.style.left = 'auto';
+          box.style.top = 'auto';
+        }
+        // Si el estado es close o minimized, mostrar la burbuja y eliminar el iframe
+        if (event.data.state === 'close' || event.data.state === 'minimized') {
+          showBubble();
+        }
+      }
+    });
+
+    // Al cargar, mostrar solo la burbuja
+    showBubble();
+  </script>
+</body>
+</html> 

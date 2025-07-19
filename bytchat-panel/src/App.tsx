@@ -35,7 +35,7 @@ function App() {
     return null; 
   }
 
-  const isDashboard = location.pathname === '/dashboard';
+  const isAuthPage = location.pathname === '/login' || location.pathname === '/register';
 
   return (
     <div className="flex h-screen bg-slate-50">
@@ -59,7 +59,7 @@ function App() {
       <div className="flex-1 flex flex-col overflow-hidden">
         <Header onMenuClick={() => setSidebarOpen(true)} />
         <main className="flex-1 overflow-x-hidden overflow-y-auto p-6">
-          <Outlet />
+          {isAuthPage ? <Outlet /> : <div id="bytchat-main-container"><Outlet /></div>}
         </main>
       </div>
       {/* 2. AÑADIR EL COMPONENTE TOASTER AQUÍ */}

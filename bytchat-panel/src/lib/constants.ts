@@ -38,4 +38,18 @@ export const AVAILABLE_MODELS: Model[] = [
     name: 'DeepSeek Coder', // Asumamos que es para tareas complejas
     task_type: 'complex', // <-- AÑADIDO
   },
+  {
+    provider: 'xai',
+    id: 'grok-3-fast',
+    name: 'Grok 3 Fast',
+    task_type: 'simple',
+    comingSoon: true,
+  },
+  {
+    provider: 'xai',
+    id: 'grok-4',
+    name: 'Grok 4',
+    task_type: 'complex',
+    comingSoon: true,
+  },
 ];
