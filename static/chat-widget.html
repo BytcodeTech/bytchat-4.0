@@ -518,16 +518,25 @@ html, body {
       // Llamar a la API pública de chat
       try {
         const userAnonId = getAnonUserId();
-        const res = await fetch(`/chat-public/${botId}`, {
+        // Detectar automáticamente el protocolo
+        const protocol = window.location.protocol;
+        const isHTTPS = protocol === 'https:';
+        const apiURL = isHTTPS ? 'https://161.132.45.210' : 'http://161.132.45.210:8001';
+        
+        const res = await fetch(`${apiURL}/chat/widget/${botId}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ query: text, userAnonId })
         });
-        if (!res.ok) throw new Error('Error en la respuesta del servidor');
+        if (!res.ok) {
+          const errorText = await res.text().catch(() => 'Sin detalles');
+          throw new Error(`Error ${res.status}: ${errorText}`);
+        }
         const data = await res.text();
         addMessage(data, 'bot');
-      } catch {
-        addMessage('Error de conexión', 'bot');
+      } catch (error) {
+        console.error('Error detallado:', error);
+        addMessage(`Error: ${error.message}`, 'bot');
       }
     });
 

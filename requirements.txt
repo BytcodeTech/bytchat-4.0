@@ -15,6 +15,7 @@
     # --- Conectores de Modelos LLM ---
     google-generativeai
     openai
+    httpx
 
     # --- Sistema RAG y Vectores ---
     sentence-transformers

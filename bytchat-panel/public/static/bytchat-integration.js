@@ -41,7 +41,12 @@
   function showChatWidget() {
     box.innerHTML = '';
     const iframe = document.createElement('iframe');
-    iframe.src = `https://bytcode.tech/static/chat-widget.html?autoOpen=1&id=${encodeURIComponent(botId)}&color=${encodeURIComponent(color)}&bg=${encodeURIComponent(bg)}&mensaje=${encodeURIComponent(mensaje)}&logo=${encodeURIComponent(logo)}&nombre=${encodeURIComponent(nombre)}`;
+    // Detectar automáticamente el protocolo de la página actual
+    const protocol = window.location.protocol; // http: o https:
+    const isHTTPS = protocol === 'https:';
+    const baseURL = isHTTPS ? 'https://161.132.45.210' : 'http://161.132.45.210:8001';
+    
+    iframe.src = `${baseURL}/static/chat-widget.html?autoOpen=1&id=${encodeURIComponent(botId)}&color=${encodeURIComponent(color)}&bg=${encodeURIComponent(bg)}&mensaje=${encodeURIComponent(mensaje)}&logo=${encodeURIComponent(logo)}&nombre=${encodeURIComponent(nombre)}`;
     iframe.allow = 'microphone';
     iframe.style.width = '350px';
     iframe.style.height = '500px';

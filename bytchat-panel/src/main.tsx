@@ -10,7 +10,10 @@ import RegisterPage from './pages/RegisterPage.tsx';
 import BotsPage from './pages/BotsPage.tsx'; // <-- 1. IMPORTAR LA NUEVA PÁGINA
 import TrainingPage from './pages/TrainingPage'; // <-- Importar la nueva página
 import EmbedChatPage from './pages/EmbedChatPage'; // Importar la nueva página
+import AnalyticsPage from './pages/AnalyticsPage'; // Importar la página de analíticas
+import BillingPage from './pages/BillingPage'; // Importar la página de facturación
 import AdminPage from './pages/AdminPage';
+import ModelPricingPage from './pages/ModelPricingPage'; // Reactivado con versión simplificada
 import AdminRoute from './components/auth/AdminRoute';
 
 const router = createBrowserRouter([
@@ -18,6 +21,10 @@ const router = createBrowserRouter([
     path: '/',
     element: <App />,
     children: [
+      {
+        index: true, // <-- Ruta por defecto
+        element: <BotsPage />,
+      },
       {
         path: 'dashboard', // <-- 2. AÑADIMOS UNA RUTA ESPECÍFICA
         element: <DashboardPage />,
@@ -35,10 +42,26 @@ const router = createBrowserRouter([
         element: <EmbedChatPage />,
       },
       {
+        path: 'analytics', // <-- Añadir la ruta de analíticas
+        element: <AnalyticsPage />,
+      },
+      {
+        path: 'billing', // <-- Añadir la ruta de facturación
+        element: <BillingPage />,
+      },
+      {
         path: 'admin',
         element: (
           <AdminRoute>
             <AdminPage />
+          </AdminRoute>
+        ),
+      },
+      {
+        path: 'model-pricing',
+        element: (
+          <AdminRoute>
+            <ModelPricingPage />
           </AdminRoute>
         ),
       },

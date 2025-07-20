@@ -16,8 +16,8 @@ export default function ChatSnippetGenerator({ botId }) {
   // Si hay logo subido, usar su URL temporal, si no, usar logoUrl
   const logo = uploadedLogo ? uploadedLogo : logoUrl;
 
-  // Cambiar la URL base para usar el dominio principal
-  const baseUrl = "https://bytcode.tech/static/chat-widget.html";
+  // Cambiar la URL base para usar el servidor actual
+  const baseUrl = "https://161.132.45.210/static/chat-widget.html";
   // Usar color seguro siempre
   const safeColor = color || "#14305a";
   const src = `${baseUrl}?id=${botId}&color=${encodeURIComponent(safeColor)}&bg=${encodeURIComponent(bg)}&mensaje=${encodeURIComponent(mensaje)}&logo=${encodeURIComponent(logo)}&nombre=${encodeURIComponent(nombre)}&preview=1`;
@@ -33,7 +33,7 @@ export default function ChatSnippetGenerator({ botId }) {
     mensaje: "${mensaje}"
   };
 </script>
-<script src=\"/static/bytchat-integration.js\"></script>`;
+<script src="https://161.132.45.210/static/bytchat-integration.js"></script>`;
 
   // Código responsivo mejorado con CSS inline
   const snippet = `<div style="position: relative; width: 100%; max-width: 400px; height: 600px; margin: 0 auto;">

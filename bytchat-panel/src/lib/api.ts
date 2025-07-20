@@ -1,12 +1,7 @@
 // bytchat-panel/src/lib/api.ts
-import { useAuthStore } from '@/store/authStore';
 import axios from 'axios';
 
-// --- CAMBIO PRINCIPAL ---
-// En lugar de una URL completa, usamos una ruta relativa.
-// Esto le dice a Axios que haga la solicitud al mismo host y puerto
-// donde se ejecuta Vite. Vite verá que la ruta empieza por '/api'
-// y la redirigirá a http://127.0.0.1:8001 como se define en vite.config.ts
+// Versión con autenticación restaurada de forma segura
 const API_URL = '/api'; 
 
 const api = axios.create({
@@ -16,16 +11,45 @@ const api = axios.create({
   },
 });
 
-// El interceptor para el token se mantiene igual, es correcto.
+// Interceptor con autenticación lazy (se carga solo cuando se necesita)
 api.interceptors.request.use(
-  (config) => {
-    const token = useAuthStore.getState().token;
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+  async (config) => {
+    try {
+      // Importación dinámica para evitar problemas de inicialización
+      const { useAuthStore } = await import('@/store/authStore');
+      const token = useAuthStore.getState().token;
+      
+      console.log('🔄 API Request:', config.url, token ? '✅ Con token' : '❌ Sin token');
+      
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+      
+      return config;
+    } catch (error) {
+      console.error('❌ Error en interceptor de autenticación:', error);
+      return config;
     }
-    return config;
   },
   (error) => {
+    console.error('❌ API Request Error:', error);
+    return Promise.reject(error);
+  }
+);
+
+api.interceptors.response.use(
+  (response) => {
+    console.log('✅ API Response:', response.status, response.config.url);
+    return response;
+  },
+  (error) => {
+    console.error('❌ API Response Error:', error.response?.status, error.message);
+    
+    // Si es 401, podríamos limpiar el auth store
+    if (error.response?.status === 401) {
+      console.log('🔑 Error 401: Token inválido o expirado');
+    }
+    
     return Promise.reject(error);
   }
 );

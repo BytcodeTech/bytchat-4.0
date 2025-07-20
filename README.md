@@ -1,376 +1,319 @@
-# Bytchat SaaS - Plataforma de Asistentes de IA v4.0
+# 🤖 Bytchat SaaS - Plataforma de IA v4.0
 
-Bienvenido a la documentación de Bytchat, una plataforma como servicio (SaaS) diseñada para crear, gestionar y chatear con asistentes de IA personalizados. El proyecto está dividido en un backend robusto de FastAPI y un panel de control moderno construido con React.
+> **Plataforma completa para crear, gestionar y monetizar asistentes de IA con múltiples modelos de última generación**
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.104.1-009688.svg)](https://fastapi.tiangolo.com)
+[![React](https://img.shields.io/badge/React-18.0+-61DAFB.svg)](https://reactjs.org)
+
+## 📋 Tabla de Contenidos
+
+- [🚀 Características Principales](#-características-principales)
+- [💰 Planes y Precios](#-planes-y-precios)
+- [🤖 Modelos de IA Disponibles](#-modelos-de-ia-disponibles)
+- [🏗️ Arquitectura](#️-arquitectura)
+- [🔐 Sistema de Roles](#-sistema-de-roles)
+- [⚡ Instalación Rápida](#-instalación-rápida)
+- [📊 Analytics y Métricas](#-analytics-y-métricas)
+- [🔧 Configuración](#-configuración)
+- [📚 Documentación](#-documentación)
+
+---
 
 ## 🚀 Características Principales
 
-- **Chatbots Inteligentes**: Crea asistentes de IA personalizados con múltiples modelos
-- **Panel de Control Moderno**: Interfaz React intuitiva para gestionar bots
-- **Sistema de Roles y Permisos**: Control granular de acceso con roles USER, ADMIN y SUPER_ADMIN
-- **Panel de Administración**: Gestión completa de usuarios y aprobaciones
-- **Gestión de Contraseñas**: Modal seguro para cambiar contraseña del usuario actual
-- **Toggle de Aprobación**: Aprobar/desaprobar usuarios existentes (solo SUPER_ADMIN)
-- **Integración Fácil**: Widget profesional para incrustar en cualquier web
-- **Entrenamiento con Documentos**: Sube archivos para entrenar tus bots
-- **API REST Completa**: Endpoints para integración personalizada
-- **Despliegue Docker**: Configuración completa con Docker Compose
+### 🎯 **Para Desarrolladores**
+- **API REST completa** con documentación interactiva (Swagger/OpenAPI)
+- **Múltiples modelos de IA**: Google Gemini, OpenAI GPT, DeepSeek
+- **Sistema de métricas avanzado** con tracking de tokens y costos
+- **Autenticación JWT** con roles y permisos granulares
+- **Procesamiento de documentos** con RAG (Retrieval-Augmented Generation)
+- **Cola de tareas asíncronas** con Celery y Redis
+
+### 🎨 **Para Usuarios Finales**
+- **Panel de control moderno** construido con React
+- **Widget de chat profesional** para integrar en cualquier web
+- **Entrenamiento de bots** arrastrando y soltando documentos
+- **Analytics en tiempo real** con gráficos interactivos
+- **Gestión de usuarios** con sistema de aprobaciones
+- **Cambio de contraseñas** seguro y encriptado
+
+### 🔒 **Seguridad y Escalabilidad**
+- **Contenedores Docker** para despliegue consistente
+- **Base de datos PostgreSQL** con migraciones automáticas
+- **Proxy inverso Nginx** con SSL/TLS
+- **Encriptación de contraseñas** con bcrypt
+- **Rate limiting** y protección contra abuso
+
+---
+
+## 💰 Planes y Precios
+
+| Plan | Precio/mes | Tokens Incluidos | Tokens Adicionales | Ideal para |
+|------|------------|------------------|-------------------|------------|
+| **FREE** | $0 | 100K | $0.15/1K | Proyectos personales, pruebas |
+| **PRO** | $20 | 500K | $0.12/1K | Empresas, sitios comerciales |
+| **ENTERPRISE** | $100 | 2M | $0.10/1K | Alto volumen, aplicaciones enterprise |
+
+### ✨ **Todos los planes incluyen:**
+- ✅ Bots ilimitados
+- ✅ Acceso a todos los modelos de IA
+- ✅ Widget de chat personalizable
+- ✅ Analytics detalladas
+- ✅ API REST completa
+- ✅ Entrenamiento con documentos
+
+**[📋 Ver detalles completos de planes →](./PRICING.md)**
+
+---
+
+## 🤖 Modelos de IA Disponibles
+
+### **Google Gemini Flash** 🚀
+- **Ultra rápido** - Respuestas en millisegundos
+- **Costo eficiente** - $0.000075 por 1K tokens
+- **Ideal para**: Chat en tiempo real, consultas frecuentes
+
+### **Google Gemini Pro** 🧠
+- **Reasoning avanzado** - Análisis complejos
+- **Calidad premium** - $0.00125 por 1K tokens
+- **Ideal para**: Tareas que requieren análisis profundo
+
+### **OpenAI GPT-4** 🏆
+- **El más avanzado** - Líder del mercado
+- **Calidad máxima** - $0.003 por 1K tokens
+- **Ideal para**: Escritura creativa, tareas complejas
+
+### **DeepSeek Chat** 💎
+- **Mejor precio-calidad** - Rendimiento excepcional
+- **Súper económico** - $0.00014 por 1K tokens
+- **Ideal para**: Uso general, optimización de costos
+
+---
 
 ## 🏗️ Arquitectura
 
-La plataforma está desplegada usando Docker y Docker Compose, e incluye los siguientes servicios:
-
-- **Nginx**: Proxy inverso que gestiona el tráfico público
-- **FastAPI (Web)**: El servidor principal de la API
-- **PostgreSQL (DB)**: Base de datos relacional para la persistencia de datos
-- **Redis**: Broker de mensajería para tareas asíncronas
-- **Celery (Worker)**: Servicio para ejecutar tareas pesadas en segundo plano
-- **React (Frontend)**: Panel de control interactivo para la gestión de la plataforma
-
-## 🔐 Sistema de Roles y Permisos
-
-### **Roles Disponibles**
-
-1. **USER** (Usuario Regular)
-   - Crear y gestionar sus propios bots
-   - Entrenar bots con documentos
-   - Usar el chat integrado
-   - Acceso limitado al panel principal
-   - Cambiar su propia contraseña
-
-2. **ADMIN** (Administrador)
-   - Todas las funcionalidades de USER
-   - Acceso al Panel de Administración
-   - Aprobar/rechazar usuarios nuevos
-   - Gestionar usuarios de la plataforma
-   - Ver métricas y estadísticas
-
-3. **SUPER_ADMIN** (Super Administrador)
-   - Todas las funcionalidades de ADMIN
-   - Cambiar roles de usuarios
-   - Aprobar/desaprobar usuarios existentes
-   - Acceso completo a todas las funcionalidades
-   - Gestión de configuración del sistema
-
-### **Panel de Administración**
-
-El panel de administración incluye:
-
-- **Gestión de Usuarios**: Ver, aprobar, rechazar y gestionar usuarios
-- **Usuarios Pendientes**: Lista de usuarios esperando aprobación
-- **Estadísticas**: Métricas de uso y actividad
-- **Gestión de Roles**: Cambiar roles de usuarios (solo SUPER_ADMIN)
-- **Toggle de Aprobación**: Aprobar/desaprobar usuarios existentes (solo SUPER_ADMIN)
-- **Gestión de Contraseñas**: Cambiar contraseña del usuario actual
-
-## 📁 Estructura del Proyecto
-
-```
-/
-├── app/                  # Backend FastAPI
-│   ├── core/
-│   ├── crud.py
-│   ├── main.py
-│   ├── models.py
-│   ├── schemas.py
-│   ├── auth.py          # Sistema de autenticación y permisos
-│   └── config.py        # Configuración de la aplicación
-├── bytchat-panel/        # Frontend React
-│   ├── public/
-│   └── src/
-│       ├── components/
-│       │   └── auth/
-│       │       └── AdminRoute.tsx  # Protección de rutas
-│       ├── pages/
-│       │   └── AdminPage.tsx       # Panel de administración
-│       ├── store/
-│       │   └── authStore.ts        # Estado de autenticación
-│       └── main.tsx
-├── static/               # Archivos estáticos
-│   ├── chat-widget.html
-│   ├── bytchat-integration.js
-│   └── demo-burbuja.html
-├── nginx/                # Configuración de Nginx
-├── .env.example          # Variables de entorno
-├── docker-compose.yml    # Orquestación de servicios
-├── migrate_users.py      # Script de migración y creación de super admin
-└── README.md             # Esta documentación
+```mermaid
+graph TB
+    A[👤 Usuario] --> B[🌐 Nginx Proxy]
+    B --> C[⚛️ React Panel]
+    B --> D[🚀 FastAPI Backend]
+    D --> E[🐘 PostgreSQL]
+    D --> F[📦 Redis]
+    D --> G[👷 Celery Worker]
+    D --> H[🤖 Modelos IA]
+    
+    H --> I[🔵 Google Gemini]
+    H --> J[🟢 OpenAI GPT]
+    H --> K[🟣 DeepSeek]
 ```
 
-## 🛠️ Instalación y Configuración
+### **Servicios incluidos:**
+- **🌐 Nginx**: Proxy inverso con SSL/TLS
+- **🚀 FastAPI**: API REST principal
+- **⚛️ React**: Panel de control moderno
+- **🐘 PostgreSQL**: Base de datos relacional
+- **📦 Redis**: Cache y broker de mensajes
+- **👷 Celery**: Procesamiento de tareas en background
 
-### Prerrequisitos
+---
 
-- Docker y Docker Compose (versión con plugin)
-- Node.js y npm (para desarrollo del frontend)
+## 🔐 Sistema de Roles
 
-### 1. Configuración del Backend
+### **👤 USER** (Usuario Regular)
+- ✅ Crear y gestionar bots personales
+- ✅ Entrenar bots con documentos
+- ✅ Acceso al chat integrado
+- ✅ Ver analytics propias
+- ✅ Cambiar contraseña
 
-1. **Clona el repositorio** (si aplica)
-2. **Crea el archivo de entorno:**
-   ```bash
-   cp .env.example .env
-   # Edita el archivo .env con tus valores
-   ```
-3. **Levanta los servicios:**
-   ```bash
-   docker-compose up -d --build
-   ```
-4. **Ejecuta la migración inicial:**
-   ```bash
-   docker-compose exec web python migrate_users.py
-   ```
-5. **Verifica el estado:**
-   ```bash
-   docker-compose ps
-   ```
+### **👨‍💼 ADMIN** (Administrador)
+- ✅ **Todo lo del USER** +
+- ✅ Panel de administración
+- ✅ Aprobar/rechazar usuarios
+- ✅ Ver métricas globales
+- ✅ Gestionar usuarios
 
-Una vez levantado, el backend será accesible en `http://<IP_DEL_SERVIDOR>`. La documentación interactiva de la API estará disponible en `http://<IP_DEL_SERVIDOR>/docs`.
+### **🔒 SUPER_ADMIN** (Super Administrador)
+- ✅ **Todo lo del ADMIN** +
+- ✅ Cambiar roles de usuarios
+- ✅ Acceso completo al sistema
+- ✅ Configuraciones avanzadas
 
-### 2. Configuración del Frontend
+---
 
-1. **Navega a la carpeta del panel:**
-   ```bash
-   cd bytchat-panel
-   ```
-2. **Instala las dependencias:**
-   ```bash
-   npm install
-   ```
-3. **Inicia el servidor de desarrollo:**
-   ```bash
-   npm run dev -- --host
-   ```
+## ⚡ Instalación Rápida
 
-El panel de control será accesible en `http://<IP_DEL_SERVIDOR>:5175`.
+### **Prerrequisitos**
+- Docker y Docker Compose
+- Git
+- Puerto 8001 disponible
 
-## 🔐 Configuración de Variables de Entorno
+### **1. Clonar repositorio**
+```bash
+git clone https://github.com/tu-usuario/bytchat-saas.git
+cd bytchat-saas
+```
 
-Crea un archivo `.env` con las siguientes variables:
+### **2. Configurar variables de entorno**
+```bash
+cp .env.example .env
+# Editar .env con tus API keys
+```
 
-```env
-# Variables de Base de Datos PostgreSQL
-POSTGRES_USER=postgres
-POSTGRES_PASSWORD=postgres
-POSTGRES_DB=bytchat
+### **3. Obtener API Keys** (Todas GRATIS)
 
-# Variables para la aplicación
+#### **Google Gemini (Recomendado)**
+1. Ir a [Google AI Studio](https://aistudio.google.com/app/apikey)
+2. Crear nueva API key
+3. Agregar a `.env`: `GOOGLE_API_KEY=tu_api_key`
+
+#### **OpenAI (Opcional)**
+1. Ir a [OpenAI Platform](https://platform.openai.com/api-keys)
+2. Crear nueva API key
+3. Agregar a `.env`: `OPENAI_API_KEY=tu_api_key`
+
+#### **DeepSeek (Opcional)**
+1. Ir a [DeepSeek Platform](https://platform.deepseek.com)
+2. Crear nueva API key
+3. Agregar a `.env`: `DEEPSEEK_API_KEY=tu_api_key`
+
+### **4. Levantar servicios**
+```bash
+docker compose up -d
+```
+
+### **5. Acceder a la plataforma**
+- **Panel de control**: http://localhost:8001
+- **API Docs**: http://localhost:8001/docs
+- **Demo Widget**: http://localhost:8001/static/demo-burbuja.html
+
+### **6. Credenciales por defecto**
+- **Email**: admin@bytcode.tech
+- **Password**: superagente123
+
+---
+
+## 📊 Analytics y Métricas
+
+### **Dashboard incluye:**
+- 📈 **Uso por proveedor de IA** (Google, OpenAI, DeepSeek)
+- 🔤 **Tokens consumidos y restantes**
+- 💰 **Costos detallados por modelo**
+- 📅 **Actividad diaria** (últimos 7 días)
+- 🎯 **Distribución de tokens** por plan
+- ⚡ **Métricas en tiempo real**
+
+### **Características avanzadas:**
+- ✅ Tracking automático de todos los chats
+- ✅ Cálculo de costos por token
+- ✅ Alertas de límites de plan
+- ✅ Exportación de datos
+- ✅ API para métricas customizadas
+
+---
+
+## 🔧 Configuración
+
+### **Variables de entorno principales:**
+```bash
+# Base de datos
 DB_USER=postgres
 DB_PASSWORD=postgres
 DB_NAME=bytchat
 
-# Variables para el Super Administrador
-SUPER_ADMIN_EMAIL=admin@bytcode.tech
-SUPER_ADMIN_PASSWORD=admin123
-
-# API Keys
+# API Keys de modelos IA
 GOOGLE_API_KEY=tu_google_api_key
 OPENAI_API_KEY=tu_openai_api_key
 DEEPSEEK_API_KEY=tu_deepseek_api_key
 
-# Variables adicionales
-SECRET_KEY=un_secreto_muy_secreto_para_el_token
-ALGORITHM=HS256
-ACCESS_TOKEN_EXPIRE_MINUTES=30
-REDIS_URL=redis://redis:6379
-CELERY_BROKER_URL=redis://redis:6379
-CELERY_RESULT_BACKEND=redis://redis:6379
-DATABASE_URL=postgresql://postgres:postgres@db/bytchat
+# Super Admin
+SUPER_ADMIN_EMAIL=admin@bytcode.tech
+SUPER_ADMIN_PASSWORD=tu_password_seguro
 ```
 
-## 📚 Documentación de la API
-
-### Autenticación
-
-La API utiliza un sistema de Tokens Bearer (OAuth2) para proteger los endpoints sensibles:
-
-1. Registra un nuevo usuario con `POST /users/`
-2. Inicia sesión con `POST /token` para obtener un `access_token`
-3. Incluye la cabecera: `Authorization: Bearer TU_ACCESS_TOKEN_AQUI`
-
-### Endpoints Principales
-
-#### 🔐 Authentication (`/token`)
-- **`POST /token`**: Inicia sesión y obtiene token de acceso
-
-#### 👥 Users (`/users/`)
-- **`POST /users/`**: Crea un nuevo usuario
-- **`GET /users/me/`**: Obtiene información del usuario actual
-- **`PUT /users/me/password/`**: Cambia la contraseña del usuario actual
-
-#### 🤖 Bots (`/bots/`) - Requiere autenticación 🔒
-- **`POST /bots/`**: Crea un nuevo bot
-- **`GET /bots/`**: Lista todos los bots del usuario
-- **`PUT /bots/{bot_id}`**: Actualiza un bot
-- **`DELETE /bots/{bot_id}`**: Elimina un bot
-- **`POST /bots/{bot_id}/models/`**: Añade modelo de IA
-- **`DELETE /bots/{bot_id}/models/{model_config_id}`**: Elimina modelo
-- **`POST /bots/{bot_id}/train`**: Entrena bot con documento
-
-#### 💬 Chat (`/chat/`) - Requiere autenticación 🔒
-- **`POST /chat/{bot_id}`**: Envía mensaje y recibe respuesta en streaming
-
-#### 🛡️ Admin (`/admin/`) - Requiere rol ADMIN 🔒
-- **`GET /admin/users/`**: Lista todos los usuarios
-- **`GET /admin/users/pending/`**: Lista usuarios pendientes de aprobación
-- **`POST /admin/users/{user_id}/approve/`**: Aprueba un usuario
-- **`POST /admin/users/{user_id}/reject/`**: Rechaza un usuario
-- **`PUT /admin/users/{user_id}/status/`**: Actualiza estado de usuario
-
-#### 👑 Super Admin (`/admin/`) - Requiere rol SUPER_ADMIN 🔒
-- **`POST /admin/users/{user_id}/role/`**: Cambia rol de usuario
-- **`POST /admin/users/{user_id}/toggle-approval/`**: Cambia estado de aprobación de usuario (aprobar/desaprobar)
-
-#### 🏠 Root (`/`)
-- **`GET /`**: Verifica que la API está en línea
-
-## 🎛️ Panel de Control (Frontend)
-
-### Funcionalidades Principales
-
-- **🔐 Autenticación Completa**: Login y registro con gestión de estado
-- **🛡️ Rutas Protegidas**: Panel inaccesible para usuarios no autenticados
-- **👑 Sistema de Roles**: Diferentes niveles de acceso según el rol
-- **🔒 Gestión de Contraseñas**: Modal seguro para cambiar contraseña del usuario actual
-- **🤖 Gestión de Bots (CRUD)**:
-  - Crear bots con formulario modal
-  - Listar bots en cuadrícula moderna
-  - Editar nombre, descripción e instrucciones
-  - Eliminar bots con confirmación
-- **🛠️ Toolbox de Modelos**: Gestionar modelos de IA por bot
-- **📊 Entrenamiento**: Subir documentos para entrenar bots
-- **💬 Chat Integrado**: Probar bots directamente desde el panel
-- **🎨 Integración de Widget**: Generar código para incrustar chat
-- **🔔 Notificaciones**: Feedback visual para todas las operaciones
-
-### Panel de Administración
-
-- **👥 Gestión de Usuarios**: Ver, aprobar y gestionar usuarios
-- **⏳ Usuarios Pendientes**: Lista de usuarios esperando aprobación
-- **📊 Estadísticas**: Métricas de uso y actividad
-- **🔐 Gestión de Roles**: Cambiar roles de usuarios (solo SUPER_ADMIN)
-- **🔄 Toggle de Aprobación**: Aprobar/desaprobar usuarios existentes (solo SUPER_ADMIN)
-- **🔒 Cambio de Contraseña**: Modal seguro para cambiar contraseña del usuario actual
-
-### Vista Previa Interactiva del Widget
-
-El panel incluye una **vista previa interactiva** que simula la experiencia real del widget:
-
-- **Estado inicial**: Solo burbuja flotante
-- **Interactividad**: Clic en burbuja abre el chat
-- **Minimización**: Clic en X vuelve a la burbuja
-- **Animaciones suaves**: Transiciones fluidas entre estados
-- **Personalización en tiempo real**: Colores, logo, nombre y mensaje
-
-## 🌐 Integración del Widget
-
-### Integración Fácil (Recomendada)
-
-Para añadir el chat profesional de Bytchat a tu web, solo copia y pega este código antes de la etiqueta `</body>`:
-
-```html
-<script>
-  window.bytchatConfig = {
-    botId: "AQUÍ_SU_ID", // Obligatorio
-    color: "#14305a",    // Opcional
-    logo: "URL_DEL_LOGO",// Opcional
-    nombre: "ChatBot",   // Opcional
-    mensaje: "¡Hola! ¿En qué puedo ayudarte?" // Opcional
-  };
-</script>
-<script src="https://bytcode.tech/static/bytchat-integration.js"></script>
-```
-
-### Características del Widget
-
-- **Burbuja Profesional**: Aparece como burbuja flotante
-- **Apertura/Cierre Suave**: Animaciones profesionales
-- **Personalización**: Color, logo, nombre y mensaje
-- **Responsive**: Se adapta a cualquier dispositivo
-- **Sin HTML Extra**: El script crea todo automáticamente
-
-### Integración Avanzada
-
-Para control total del widget, puedes usar el sistema de `postMessage`:
-
-```html
-<div id="bytchat-box" style="position: fixed; bottom: 20px; right: 20px; width: 350px; height: 500px; z-index: 1000;">
-  <iframe 
-    src="https://bytcode.tech/static/chat-widget.html?id=TU_BOT_ID&color=%2314305a&bg=%23f5f5f5&mensaje=%C2%A1Hola!%20%C2%BFEn%20qu%C3%A9%20puedo%20ayudarte%3F&logo=URL_DEL_LOGO&nombre=ChatBot" 
-    style="width: 100%; height: 100%; border: none; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.1);"
-    title="Chat Widget"
-    allow="microphone"
-  ></iframe>
-</div>
-
-<script>
-window.addEventListener('message', function(event) {
-  if (event.data && event.data.type === 'bytchat-state') {
-    const box = document.getElementById('bytchat-box');
-    if (box) {
-      box.style.width = event.data.width + 'px';
-      box.style.height = event.data.height + 'px';
-      box.style.display = (event.data.state === 'open' || event.data.state === 'close') ? 'block' : 'none';
-    }
-  }
-});
-</script>
-```
-
-## 🔧 Migración y Actualizaciones
-
-### Migración Inicial
-
-Para configurar el sistema de roles en una instalación existente:
-
-```bash
-# Ejecutar el script de migración
-docker-compose exec web python migrate_users.py
-```
-
-Este script:
-- ✅ Añade la columna `role` a la tabla `users`
-- ✅ Actualiza usuarios existentes con rol `USER`
-- ✅ Crea un super administrador por defecto
-
-### Credenciales por Defecto
-
-Después de la migración, se crea automáticamente un super administrador:
-
-- **Email**: `admin@bytcode.tech`
-- **Password**: `admin123`
-
-**⚠️ IMPORTANTE**: Cambia la contraseña después del primer login.
-
-## 📖 Documentación Adicional
-
-- **Integración Completa**: `/static/INTEGRACION_WIDGET.html`
-- **Demo del Widget**: `/static/demo-burbuja.html`
-- **API Docs**: `http://<IP_DEL_SERVIDOR>/docs`
-
-## 🔒 Seguridad
-
-### Características de Seguridad
-
-- **Autenticación JWT**: Tokens seguros con expiración
-- **Sistema de Roles**: Control granular de acceso
-- **Aprobación Manual**: Usuarios requieren aprobación de administradores
-- **Protección de Rutas**: Frontend y backend validan permisos
-- **Encriptación de Contraseñas**: Hashing con bcrypt
-- **Gestión de Contraseñas**: Validación de contraseña actual antes de cambiar
-- **Toggle de Aprobación**: Control granular sobre el estado de aprobación de usuarios
-
-### Mejores Prácticas
-
-1. **Cambiar credenciales por defecto** después de la instalación
-2. **Usar HTTPS** en producción
-3. **Configurar firewall** para proteger puertos sensibles
-4. **Hacer backups regulares** de la base de datos
-5. **Monitorear logs** para detectar actividad sospechosa
-
-## 🤝 Soporte
-
-Si tienes dudas o necesitas soporte, contacta a nuestro equipo técnico.
+### **Personalización:**
+- **Logo y branding**: Editar `/static/` 
+- **Colores**: Modificar CSS en `/bytchat-panel/`
+- **Modelos**: Configurar en `/app/core/model_router.py`
+- **Precios**: Ajustar en `/app/services/metrics_service.py`
 
 ---
 
-**Bytchat - Plataforma de Asistentes de IA v4.0**
+## 📚 Documentación
+
+### **Para Desarrolladores:**
+- [📖 API Reference](http://localhost:8001/docs) - Documentación interactiva
+- [🔧 Configuración Avanzada](./docs/configuration.md)
+- [🚀 Despliegue en Producción](./docs/deployment.md)
+- [🔌 Integraciones](./docs/integrations.md)
+
+### **Para Usuarios:**
+- [💰 Planes y Precios](./PRICING.md)
+- [🎯 Guía de Usuario](./docs/user-guide.md)
+- [🤖 Entrenamiento de Bots](./docs/bot-training.md)
+- [📊 Analytics](./docs/analytics.md)
+
+### **Widget de Chat:**
+- [⚡ Integración Rápida](./docs/widget-integration.md)
+- [🎨 Personalización](./docs/widget-customization.md)
+- [📋 Ejemplos](./docs/widget-examples.md)
+
+---
+
+## 🚀 Stack Tecnológico
+
+### **Backend:**
+- **FastAPI** - Framework web moderno y rápido
+- **PostgreSQL** - Base de datos relacional robusta  
+- **Redis** - Cache y broker de mensajes
+- **Celery** - Procesamiento asíncrono
+- **SQLAlchemy** - ORM avanzado
+- **Pydantic** - Validación de datos
+
+### **Frontend:**
+- **React 18** - Interfaz de usuario moderna
+- **TypeScript** - Tipado estático
+- **Tailwind CSS** - Estilos utility-first
+- **Chart.js** - Gráficos interactivos
+- **Axios** - Cliente HTTP
+
+### **DevOps:**
+- **Docker & Docker Compose** - Contenedores
+- **Nginx** - Proxy inverso
+- **SSL/TLS** - Certificados automáticos
+- **GitHub Actions** - CI/CD (opcional)
+
+---
+
+## 🤝 Contribuir
+
+1. Fork el proyecto
+2. Crear rama feature (`git checkout -b feature/nueva-caracteristica`)
+3. Commit cambios (`git commit -am 'Agregar nueva característica'`)
+4. Push a la rama (`git push origin feature/nueva-caracteristica`)
+5. Crear Pull Request
+
+---
+
+## 📞 Soporte
+
+- **📧 Email**: support@bytcode.tech
+- **💬 Discord**: [Comunidad Bytchat](https://discord.gg/bytchat)
+- **📖 Docs**: [docs.bytchat.tech](https://docs.bytchat.tech)
+- **🐛 Issues**: [GitHub Issues](https://github.com/tu-usuario/bytchat-saas/issues)
+
+---
+
+## 📄 Licencia
+
+Este proyecto está bajo la Licencia MIT. Ver [LICENSE](LICENSE) para más detalles.
+
+---
+
+## ⭐ ¿Te gustó el proyecto?
+
+**¡Dale una estrella en GitHub!** ⭐ y ayuda a otros desarrolladores a descubrir Bytchat.
+
+**[🚀 Crear Cuenta Gratis](https://bytchat.tech)** | **[📋 Ver Planes](./PRICING.md)** | **[📖 Documentación](https://docs.bytchat.tech)**

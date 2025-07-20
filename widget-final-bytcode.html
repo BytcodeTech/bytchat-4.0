@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Widget Bytchat - bytcode.tech</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #14305a, #2563eb);
+            color: white;
+            padding: 3rem 2rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px);
+            background-size: 30px 30px;
+            animation: float 20s infinite linear;
+        }
+        
+        @keyframes float {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(-30px, -30px); }
+        }
+        
+        .header h1 {
+            margin: 0;
+            font-size: 2.5rem;
+            font-weight: 700;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .header p {
+            margin: 10px 0 0 0;
+            font-size: 1.1rem;
+            opacity: 0.9;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .content {
+            padding: 2rem;
+        }
+        
+        .instructions {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .instructions h2 {
+            color: #1e293b;
+            margin-top: 0;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .step {
+            margin: 1.5rem 0;
+            padding: 1rem;
+            background: white;
+            border-left: 4px solid #14305a;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            transition: all 0.3s ease;
+        }
+        
+        .step:hover {
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            transform: translateY(-1px);
+        }
+        
+        .step strong {
+            color: #14305a;
+            font-size: 1.1rem;
+        }
+        
+        .step ul {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+        
+        .step li {
+            margin: 5px 0;
+            color: #4b5563;
+        }
+        
+        .alert {
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 2rem 0;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+        
+        .alert-success {
+            background: #ecfdf5;
+            border: 1px solid #10b981;
+        }
+        
+        .alert-warning {
+            background: #fef3c7;
+            border: 1px solid #f59e0b;
+        }
+        
+        .alert-info {
+            background: #dbeafe;
+            border: 1px solid #3b82f6;
+        }
+        
+        .alert h3 {
+            margin: 0 0 8px 0;
+            font-size: 1.1rem;
+        }
+        
+        .alert p {
+            margin: 0;
+            line-height: 1.5;
+        }
+        
+        .alert-success h3 { color: #059669; }
+        .alert-warning h3 { color: #d97706; }
+        .alert-info h3 { color: #2563eb; }
+        
+        .sample-questions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+        
+        .question-card {
+            background: #f1f5f9;
+            padding: 1rem;
+            border-radius: 8px;
+            border-left: 3px solid #14305a;
+            font-style: italic;
+            color: #475569;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .question-card:hover {
+            background: #e2e8f0;
+            transform: translateY(-2px);
+        }
+        
+        .status-indicator {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #10b981;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            z-index: 10000;
+            display: none;
+        }
+        
+        .footer {
+            background: #f8fafc;
+            padding: 2rem;
+            text-align: center;
+            color: #64748b;
+            border-top: 1px solid #e2e8f0;
+        }
+        
+        .code-snippet {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 1.5rem;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            margin: 1rem 0;
+            overflow-x: auto;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="status-indicator" id="statusIndicator">
+        ✅ Widget Cargado Correctamente
+    </div>
+
+    <div class="container">
+        <div class="header">
+            <h1>🤖 Widget Bytchat Oficial</h1>
+            <p>Conectándose a bytcode.tech con HTTPS</p>
+        </div>
+
+        <div class="content">
+            <div class="alert alert-success">
+                <span style="font-size: 1.5rem;">✅</span>
+                <div>
+                    <h3>Configuración HTTPS Válida</h3>
+                    <p>Este widget usa el dominio oficial <strong>bytcode.tech</strong> con certificado SSL válido para evitar problemas de seguridad.</p>
+                </div>
+            </div>
+
+            <div class="instructions">
+                <h2>📋 Cómo Generar Métricas con el Widget Oficial</h2>
+                
+                <div class="step">
+                    <strong>1.</strong> El widget aparecerá en la esquina inferior derecha
+                    <p style="margin: 8px 0 0 0; color: #6b7280; font-size: 0.9rem;">
+                        ✅ Conectado a: <code>https://bytcode.tech/static/bytchat-integration.js</code>
+                    </p>
+                </div>
+                
+                <div class="step">
+                    <strong>2.</strong> Haz clic en el ícono del chat para abrirlo
+                </div>
+                
+                <div class="step">
+                    <strong>3.</strong> Prueba estas preguntas para generar datos de métricas:
+                    
+                    <div class="sample-questions">
+                        <div class="question-card" onclick="copyToClipboard(this.textContent)">
+                            "¿Qué es Python y para qué se usa?"
+                        </div>
+                        <div class="question-card" onclick="copyToClipboard(this.textContent)">
+                            "Dame 5 consejos de marketing digital"
+                        </div>
+                        <div class="question-card" onclick="copyToClipboard(this.textContent)">
+                            "¿Cómo diseñar un logo profesional?"
+                        </div>
+                        <div class="question-card" onclick="copyToClipboard(this.textContent)">
+                            "Ideas innovadoras para mi negocio"
+                        </div>
+                        <div class="question-card" onclick="copyToClipboard(this.textContent)">
+                            "Tendencias tecnológicas 2024"
+                        </div>
+                        <div class="question-card" onclick="copyToClipboard(this.textContent)">
+                            "¿Cómo mejorar mi productividad?"
+                        </div>
+                    </div>
+                    
+                    <p style="margin: 10px 0 0 0; color: #6b7280; font-size: 0.9rem;">
+                        💡 <strong>Tip:</strong> Haz clic en cualquier pregunta para copiarla
+                    </p>
+                </div>
+                
+                <div class="step">
+                    <strong>4.</strong> Ver los resultados en el dashboard:
+                    <ul>
+                        <li>🔗 <strong>Panel Principal:</strong> <a href="https://bytcode.tech:5174" target="_blank">https://bytcode.tech:5174</a></li>
+                        <li>🔗 <strong>Analytics:</strong> <a href="https://bytcode.tech:5174/analytics" target="_blank">https://bytcode.tech:5174/analytics</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="alert alert-info">
+                <span style="font-size: 1.5rem;">📊</span>
+                <div>
+                    <h3>Métricas que se Generarán:</h3>
+                    <p><strong>Para Usuarios:</strong> Tokens consumidos, costo mensual, conversaciones diarias, temas más preguntados</p>
+                    <p><strong>Para Súper Admins:</strong> Métricas globales, usuarios más activos, proveedores de IA más usados, ingresos por planes</p>
+                </div>
+            </div>
+
+            <div class="alert alert-success">
+                <span style="font-size: 1.5rem;">🔗</span>
+                <div>
+                    <h3>Código para Integrar en tu Web:</h3>
+                    <p>Usa este código en cualquier página web para integrar el widget:</p>
+                    <div class="code-snippet">
+&lt;script&gt;
+  window.bytchatConfig = {
+    botId: "2",
+    color: "#14305a",
+    bg: "#f5f5f5",
+    logo: "https://cdn-icons-png.flaticon.com/512/4712/4712035.png",
+    nombre: "ChatBot",
+    mensaje: "¡Hola! ¿En qué puedo ayudarte?"
+  };
+&lt;/script&gt;
+&lt;script src="https://bytcode.tech/static/bytchat-integration.js"&gt;&lt;/script&gt;
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>🚀 <strong>Bytchat 4.0</strong> - Sistema de Métricas y Analytics</p>
+            <p style="font-size: 0.8rem; margin: 5px 0 0 0;">
+                Dominio: bytcode.tech | Certificado SSL Válido | CORS Habilitado
+            </p>
+        </div>
+    </div>
+
+    <!-- Configuración del Widget -->
+    <script>
+        // Configuración del widget
+        window.bytchatConfig = {
+            botId: "2",
+            color: "#14305a",
+            bg: "#f5f5f5",
+            logo: "https://cdn-icons-png.flaticon.com/512/4712/4712035.png",
+            nombre: "ChatBot Oficial",
+            mensaje: "¡Hola! 👋 Soy el bot oficial de bytcode.tech. Pregúntame cualquier cosa para generar métricas en el dashboard 📊"
+        };
+
+        // Función para copiar texto al portapapeles
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text.replace(/"/g, '')).then(function() {
+                const indicator = document.getElementById('statusIndicator');
+                indicator.textContent = '📋 Pregunta copiada al portapapeles';
+                indicator.style.display = 'block';
+                indicator.style.background = '#3b82f6';
+                
+                setTimeout(() => {
+                    indicator.style.display = 'none';
+                }, 2000);
+            });
+        }
+
+        // Mostrar indicador cuando el widget se carga
+        window.addEventListener('load', function() {
+            setTimeout(() => {
+                const indicator = document.getElementById('statusIndicator');
+                
+                // Verificar si el widget se cargó correctamente
+                if (document.getElementById('bytchat-bubble')) {
+                    indicator.textContent = '✅ Widget conectado a bytcode.tech';
+                    indicator.style.background = '#10b981';
+                } else {
+                    indicator.textContent = '❌ Error al conectar con bytcode.tech';
+                    indicator.style.background = '#ef4444';
+                }
+                
+                indicator.style.display = 'block';
+                
+                setTimeout(() => {
+                    indicator.style.display = 'none';
+                }, 3000);
+            }, 1500);
+        });
+
+        // Detectar errores del widget
+        window.addEventListener('error', function(e) {
+            if (e.filename && e.filename.includes('bytchat-integration.js')) {
+                const indicator = document.getElementById('statusIndicator');
+                indicator.textContent = '❌ Error de conexión SSL';
+                indicator.style.background = '#ef4444';
+                indicator.style.display = 'block';
+                
+                console.error('Error del widget:', e);
+            }
+        });
+    </script>
+
+    <!-- Widget de Bytchat - Dominio Oficial con HTTPS -->
+    <script src="https://bytcode.tech/static/bytchat-integration.js" 
+            onerror="console.error('Error cargando widget desde bytcode.tech'); document.getElementById('statusIndicator').textContent='❌ Error SSL con bytcode.tech'; document.getElementById('statusIndicator').style.background='#ef4444'; document.getElementById('statusIndicator').style.display='block';"></script>
+</body>
+</html> 

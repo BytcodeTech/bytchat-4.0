@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Widget Bytchat - Sin SSL</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #14305a, #2563eb);
+            color: white;
+            padding: 3rem 2rem;
+            text-align: center;
+        }
+        
+        .content {
+            padding: 2rem;
+        }
+        
+        .alert {
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 2rem 0;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+        
+        .alert-warning {
+            background: #fef3c7;
+            border: 1px solid #f59e0b;
+        }
+        
+        .alert-info {
+            background: #dbeafe;
+            border: 1px solid #3b82f6;
+        }
+        
+        .alert h3 {
+            margin: 0 0 8px 0;
+            font-size: 1.1rem;
+        }
+        
+        .alert p {
+            margin: 0;
+            line-height: 1.5;
+        }
+        
+        .alert-warning h3 { color: #d97706; }
+        .alert-info h3 { color: #2563eb; }
+        
+        .step {
+            margin: 1.5rem 0;
+            padding: 1rem;
+            background: #f8fafc;
+            border-left: 4px solid #14305a;
+            border-radius: 8px;
+        }
+        
+        .step strong {
+            color: #14305a;
+            font-size: 1.1rem;
+        }
+        
+        .code-box {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 1rem;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            margin: 1rem 0;
+            overflow-x: auto;
+        }
+        
+        .status-indicator {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #10b981;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            z-index: 10000;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="status-indicator" id="statusIndicator">
+        ✅ Widget Cargado Correctamente
+    </div>
+
+    <div class="container">
+        <div class="header">
+            <h1>🤖 Test Widget Bytchat (HTTP)</h1>
+            <p>Versión sin SSL para evitar problemas de certificados</p>
+        </div>
+
+        <div class="content">
+            <div class="alert alert-warning">
+                <span style="font-size: 1.5rem;">⚠️</span>
+                <div>
+                    <h3>Problema de Certificado SSL Detectado</h3>
+                    <p>Tu navegador no puede cargar el widget por HTTPS debido a un certificado SSL no válido. Esta versión intenta cargar el widget usando métodos alternativos.</p>
+                </div>
+            </div>
+
+            <div class="step">
+                <strong>Método 1:</strong> Cargar Widget desde Puerto 8001 (HTTP puro)
+                <p>Intentando cargar: <code>http://161.132.45.210:8001/static/bytchat-integration.js</code></p>
+            </div>
+
+            <div class="step">
+                <strong>Método 2:</strong> Si el puerto 8001 no funciona, usa este código en cualquier página:
+                <div class="code-box">
+&lt;script&gt;
+  window.bytchatConfig = {
+    botId: "2",
+    color: "#14305a",
+    bg: "#f5f5f5",
+    logo: "https://cdn-icons-png.flaticon.com/512/4712/4712035.png",
+    nombre: "ChatBot",
+    mensaje: "¡Hola! ¿En qué puedo ayudarte?"
+  };
+&lt;/script&gt;
+&lt;script src="http://161.132.45.210:8001/static/bytchat-integration.js"&gt;&lt;/script&gt;
+                </div>
+            </div>
+
+            <div class="alert alert-info">
+                <span style="font-size: 1.5rem;">🔧</span>
+                <div>
+                    <h3>Solución Alternativa:</h3>
+                    <p>Si ningún método funciona, podemos:</p>
+                    <ul>
+                        <li>✅ Configurar un proxy sin SSL</li>
+                        <li>✅ Servir el widget desde un CDN</li>
+                        <li>✅ Usar el código inline sin archivo externo</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Configuración del Widget -->
+    <script>
+        window.bytchatConfig = {
+            botId: "2",
+            color: "#14305a",
+            bg: "#f5f5f5",
+            logo: "https://cdn-icons-png.flaticon.com/512/4712/4712035.png",
+            nombre: "ChatBot Test",
+            mensaje: "¡Hola! 👋 Pregúntame algo para generar métricas 📊"
+        };
+
+        // Mostrar estado de carga
+        window.addEventListener('load', function() {
+            setTimeout(() => {
+                const indicator = document.getElementById('statusIndicator');
+                
+                // Verificar si el widget se cargó
+                if (document.getElementById('bytchat-bubble')) {
+                    indicator.textContent = '✅ Widget cargado correctamente';
+                    indicator.style.background = '#10b981';
+                } else {
+                    indicator.textContent = '❌ Widget no se pudo cargar';
+                    indicator.style.background = '#ef4444';
+                }
+                
+                indicator.style.display = 'block';
+                
+                setTimeout(() => {
+                    indicator.style.display = 'none';
+                }, 5000);
+            }, 2000);
+        });
+
+        // Detectar errores del widget
+        window.addEventListener('error', function(e) {
+            console.log('Error detectado:', e);
+            const indicator = document.getElementById('statusIndicator');
+            indicator.textContent = '❌ Error: ' + e.message;
+            indicator.style.background = '#ef4444';
+            indicator.style.display = 'block';
+        });
+    </script>
+
+    <!-- Intentar cargar widget desde puerto 8001 (HTTP puro) -->
+    <script src="http://161.132.45.210:8001/static/bytchat-integration.js" onerror="console.log('Error cargando desde puerto 8001')"></script>
+</body>
+</html> 

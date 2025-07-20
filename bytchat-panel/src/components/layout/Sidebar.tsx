@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom'; // <-- 1. Importamos useLocation
-import { BotMessageSquare, BrainCircuit, BarChart3, CreditCard, LogOut, Settings, CodeXml, Shield } from 'lucide-react';
+import { BotMessageSquare, BrainCircuit, BarChart3, CreditCard, LogOut, Settings, CodeXml, Shield, DollarSign } from 'lucide-react';
 import NavButton from '@/components/ui/NavButton';
 import { useAuthStore } from '@/store/authStore'; // <-- 2. Importamos el store
 import { Icons } from '@/components/ui/icons';
@@ -59,17 +59,35 @@ const Sidebar: React.FC<SidebarProps> = ({ className = '', onClose }) => {
           isActive={pathname.startsWith('/embed-chat')}
           onClick={() => navigate('/embed-chat')}
         />
-        <NavButton icon={BarChart3} label="Analíticas" />
-        <NavButton icon={CreditCard} label="Facturación" />
+        <NavButton 
+          icon={BarChart3} 
+          label="Analíticas" 
+          isActive={pathname.startsWith('/analytics')}
+          onClick={() => navigate('/analytics')}
+        />
+        <NavButton 
+          icon={CreditCard} 
+          label="Facturación" 
+          isActive={pathname.startsWith('/billing')}
+          onClick={() => navigate('/billing')}
+        />
         
         {/* Panel de Administración - Solo para administradores */}
         {isAdmin() && (
-          <NavButton
-            icon={Shield}
-            label="Panel de Administración"
-            isActive={pathname.startsWith('/admin')}
-            onClick={() => navigate('/admin')}
-          />
+          <>
+            <NavButton
+              icon={Shield}
+              label="Panel de Administración"
+              isActive={pathname.startsWith('/admin')}
+              onClick={() => navigate('/admin')}
+            />
+            <NavButton
+              icon={DollarSign}
+              label="Gestión de Precios"
+              isActive={pathname.startsWith('/model-pricing')}
+              onClick={() => navigate('/model-pricing')}
+            />
+          </>
         )}
       </nav>
 
